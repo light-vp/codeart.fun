@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeArt Blocks</title>
+    <meta name="description" content="Write Python and watch it run as 3D blocks: variables, lists, dicts, loops and the call stack, step by step.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/visualizer.css">
+    <script>
+        // apply the saved site theme before first paint
+        (function () {
+            var t = null;
+            try { t = localStorage.getItem('codeart-theme'); } catch (e) {}
+            if (!t) t = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+</head>
+<body>
+    <header class="topbar">
+        <a class="brand" href="../index.html" title="Back to CodeArt.fun">
+            <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="brand-name">CodeArt<span>Blocks</span></span>
+        </a>
+        <nav class="mode-tabs" role="tablist">
+            <button class="mode-tab active" data-mode="levels" role="tab" aria-selected="true">Levels</button>
+            <button class="mode-tab" data-mode="playground" role="tab" aria-selected="false">Playground</button>
+        </nav>
+        <div class="topbar-right">
+            <span class="py-status" id="pyStatus"><span class="dot"></span><span class="txt">Starting Python…</span></span>
+            <span class="progress-pill" id="progressPill" title="Levels completed">0 / 0</span>
+            <button class="icon-btn" id="themeBtn" title="Toggle theme" aria-label="Toggle theme">◐</button>
+        </div>
+    </header>
+
+    <div class="layout">
+        <!-- Sidebar: level browser or playground examples -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-section" id="levelBrowser">
+                <input class="search" id="levelSearch" type="search" placeholder="Search levels or concepts…" aria-label="Search levels">
+                <div id="trackList"></div>
+            </div>
+            <div class="sidebar-section" id="playgroundBrowser" hidden>
+                <h3 class="side-title">Examples</h3>
+                <p class="side-note">Pick one to load it, or write anything you like. Every line you run becomes an animation.</p>
+                <div id="exampleList"></div>
+            </div>
+        </aside>
+
+        <!-- Problem + editor -->
+        <section class="workbench">
+            <div class="brief" id="brief"></div>
+            <div class="editor-toolbar">
+                <button class="btn primary" id="runBtn" title="Ctrl/⌘ + Enter">▶ Visualize</button>
+                <button class="btn" id="checkBtn">✓ Check</button>
+                <button class="btn ghost" id="demoBtn" title="Load the reference solution and animate it">Watch solution</button>
+                <button class="btn ghost" id="resetBtn" title="Restore the starter code">Reset</button>
+            </div>
+            <div id="editor"></div>
+            <div class="console">
+                <div class="console-tabs">
+                    <button class="console-tab active" data-pane="out">Output</button>
+                    <button class="console-tab" data-pane="tests">Tests</button>
+                </div>
+                <pre class="console-pane" id="outPane"></pre>
+                <div class="console-pane" id="testPane" hidden></div>
+            </div>
+        </section>
+
+        <!-- 3D stage -->
+        <section class="stage">
+            <div class="cpu" aria-live="polite">
+                <div class="cpu-cell" id="cpuFetch">
+                    <span class="cpu-tag">FETCH</span>
+                    <code class="cpu-body" id="fetchText">Press ▶ Visualize to run your program</code>
+                </div>
+                <div class="cpu-cell" id="cpuDecode">
+                    <span class="cpu-tag">DECODE</span>
+                    <div class="cpu-body" id="decodeText">—</div>
+                </div>
+                <div class="cpu-cell" id="cpuExec">
+                    <span class="cpu-tag">EXECUTE</span>
+                    <div class="cpu-body" id="execText">—</div>
+                </div>
+            </div>
+            <div class="viewport" id="viewport">
+                <div class="viewport-overlay" id="viewportMsg">
+                    <div class="hero-blocks" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+                    <p>Your program's memory appears here as blocks.</p>
+                    <p class="muted">Left: the <b>call stack</b> (one frame per running function). Right: the <b>heap</b> (lists, dicts, strings and objects).</p>
+                </div>
+                <div class="legend">
+                    <span><i style="--c:#4a72e8"></i>int</span>
+                    <span><i style="--c:#23a597"></i>float</span>
+                    <span><i style="--c:#e8962e"></i>str</span>
+                    <span><i style="--c:#4caf6a"></i>bool</span>
+                    <span><i style="--c:#83818f"></i>None</span>
+                    <span><i style="--c:#2b2733"></i>reference</span>
+                </div>
+                <button class="icon-btn recenter" id="recenterBtn" title="Recenter camera" hidden>⌖ Recenter</button>
+            </div>
+            <div class="player">
+                <div class="player-buttons">
+                    <button class="icon-btn" id="firstBtn" title="First step" aria-label="First step">⏮</button>
+                    <button class="icon-btn" id="prevBtn" title="Step back (←)" aria-label="Step back">◀</button>
+                    <button class="icon-btn play" id="playBtn" title="Play / pause (space)" aria-label="Play">▶</button>
+                    <button class="icon-btn" id="nextBtn" title="Step forward (→)" aria-label="Step forward">▶|</button>
+                    <button class="icon-btn" id="lastBtn" title="Last step" aria-label="Last step">⏭</button>
+                </div>
+                <input type="range" id="scrubber" min="0" max="0" value="0" aria-label="Scrub through steps">
+                <span class="step-count" id="stepCount">0 / 0</span>
+                <select id="speedSel" aria-label="Playback speed">
+                    <option value="0.5">0.5×</option>
+                    <option value="1" selected>1×</option>
+                    <option value="2">2×</option>
+                    <option value="4">4×</option>
+                </select>
+            </div>
+            <div class="hud" id="hud"></div>
+        </section>
+    </div>
+
+    <div class="toast" id="toast" hidden></div>
+
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
