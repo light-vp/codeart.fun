@@ -7,6 +7,13 @@ Open `visualizer/index.html` through any static server (ES modules don't load
 from `file://`), e.g. `npx http-server .` from the repo root, then visit
 `/visualizer/`.
 
+## Screenshots
+
+| | |
+| --- | --- |
+| ![Two Sum](screenshots/1-two-sum.png) | ![Reverse Linked List](screenshots/3-reverse-linked-list.png) |
+| ![Merge Sort](screenshots/4-merge-sort-stack.png) | ![Valid Parentheses, dark theme](screenshots/6-valid-parentheses-dark.png) |
+
 ## How it works
 
 ```

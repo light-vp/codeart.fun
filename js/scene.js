@@ -300,8 +300,10 @@ export class BlockScene {
     const a = from.obj.position.clone().add(new THREE.Vector3(0, 0, 0.3));
     const b = to.obj.position.clone().add(new THREE.Vector3(ent.offset[0], ent.offset[1], 0.15));
     const back = b.x < a.x + 0.5;
-    const lift = back ? 3.2 : 1.6;
-    const curve = new THREE.CubicBezierCurve3(a, a.clone().add(new THREE.Vector3(back ? 0.5 : 1.2, back ? -0.4 : 0, lift)), b.clone().add(new THREE.Vector3(-1.2, back ? 0.4 : 0, lift)), b);
+    // keep arrows close to the board: a big z-lift projects as a loop above the scene
+    const lift = back ? 1.1 : 0.45;
+    const reach = Math.min(3, Math.max(0.8, Math.abs(b.x - a.x) * 0.4));
+    const curve = new THREE.CubicBezierCurve3(a, a.clone().add(new THREE.Vector3(reach, back ? -0.8 : 0, lift)), b.clone().add(new THREE.Vector3(-reach, back ? -0.8 : 0, lift)), b);
     const { tube, head } = ent.obj.userData;
     tube.geometry.dispose();
     tube.geometry = new THREE.TubeGeometry(curve, 28, 0.045, 6, false);

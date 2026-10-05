@@ -283,10 +283,18 @@ export function layoutStep(step, ctx) {
     return used;
   };
 
+  // Roots stack downwards; once a column gets taller than the stack area,
+  // start a new column to the right so the camera doesn't zoom far out.
+  const colHeight = Math.max(9, ...spec.frames.map((f) => f.h + 2));
   let heapY = 0;
+  let colX = U.HEAP_X;
+  let colRight = U.HEAP_X;
   for (const id of roots) {
     if (placed.has(id) || !heap[id]) continue;
-    const h = layoutTree(id, U.HEAP_X, heapY);
+    if (heapY < -colHeight) { colX = colRight + U.HGAP; heapY = 0; }
+    const before = spec.objects.length;
+    const h = layoutTree(id, colX, heapY);
+    for (const o of spec.objects.slice(before)) colRight = Math.max(colRight, o.x + o.w / 2);
     heapY -= h + U.VGAP * 1.4;
   }
 
