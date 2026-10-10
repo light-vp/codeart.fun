@@ -7,8 +7,8 @@
     --pnl-paper: var(--paper, var(--surface));
     --pnl-ink: var(--ink, var(--text));
     --pnl-stroke: var(--b, 2.5px);
-    --pnl-shadow: var(--shadow-sm, 3px 3px 0 0 var(--pnl-ink));
-    --pnl-lift: var(--shadow, 6px 6px 0 0 var(--pnl-ink));
+    --pnl-shadow: 3px 3px 0 0 var(--pnl-ink);   /* same as the shared --shadow-sm, which main still defines as a soft shadow */
+    --pnl-lift: 6px 6px 0 0 var(--pnl-ink);
 }
 
 .ws.ws-float { display: block; position: relative; isolation: isolate; background: var(--bg); }
