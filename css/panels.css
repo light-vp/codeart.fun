@@ -6,9 +6,9 @@
 .ws {
     --pnl-paper: var(--paper, var(--surface));
     --pnl-ink: var(--ink, var(--text));
-    --pnl-stroke: var(--stroke, 2.5px);
-    --pnl-shadow: var(--shadow-hard, 4px 4px 0 var(--pnl-ink));
-    --pnl-lift: 8px 8px 0 var(--pnl-ink);
+    --pnl-stroke: var(--b, 2.5px);
+    --pnl-shadow: var(--shadow-sm, 3px 3px 0 0 var(--pnl-ink));
+    --pnl-lift: var(--shadow, 6px 6px 0 0 var(--pnl-ink));
 }
 
 .ws.ws-float { display: block; position: relative; isolation: isolate; background: var(--bg); }
@@ -103,7 +103,7 @@ body[data-panel-cursor="nw"], body[data-panel-cursor="se"] { cursor: nwse-resize
     align-items: center;
     height: 28px;
     padding: 0 12px;
-    border: var(--stroke, 2.5px) solid var(--ink, var(--text));
+    border: var(--b, 2.5px) solid var(--ink, var(--text));
     border-radius: 999px;
     background: var(--paper, var(--surface));
     color: var(--ink, var(--text));
