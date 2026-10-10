@@ -3,6 +3,7 @@ import { EXAMPLES } from './examples.js';
 import { decodeStep, layoutStep, TokenBook } from './model.js';
 import { loadPython, test as runTests, trace as runTrace } from './runtime.js';
 import { account } from './sync.js';
+import { PanelManager } from './panels.js';
 import { LEVELS, TIERS, TRACKS, programFor, rankedSolutions } from '../levels/index.js';
 
 const $ = (id) => document.getElementById(id);
@@ -74,19 +75,13 @@ async function initScene() {
     const { BlockScene } = await import('./scene.js');
     state.scene = new BlockScene($('viewport'));
     state.scene.setTheme(document.documentElement.dataset.theme);
-    state.scene.onUserCamera = () => { $('recenterBtn').hidden = false; };
-    const measure = () => {
-      const stage = document.querySelector('.stage').getBoundingClientRect();
-      const pipe = document.querySelector('.pipeline').getBoundingClientRect();
-      const transport = document.querySelector('.transport').getBoundingClientRect();
-      state.scene.setInsets({ top: pipe.bottom - stage.top + 8, bottom: stage.bottom - transport.top + 8 });
-    };
-    measure();
-    new ResizeObserver(measure).observe(document.querySelector('.stage'));
+    state.scene.onCameraChange = renderCamera;
+    renderCamera(state.scene.cameraState());
+    updateInsets(panels.rects());
     if (state.steps.length) show(state.idx, 0);
   } catch (err) {
     console.error(err);
-    $('emptyState').innerHTML = '<h3>3D view unavailable</h3><p>Three.js could not load (it is served from cdn.jsdelivr.net) or WebGL is disabled. The step decoder above still works.</p>';
+    $('emptyState').innerHTML = '<h3>3d view unavailable</h3><p>Three.js could not load (it is served from cdn.jsdelivr.net) or WebGL is disabled. The fetch / decode / execute panel still works.</p>';
   }
 }
 
@@ -95,9 +90,9 @@ function setPyStatus(text, kind) {
   $('pyStatus').className = `py ${kind || ''}`;
   $('pyStatus').querySelector('span').textContent = text;
 }
-const pyReady = loadPython((msg) => setPyStatus(msg.replace('…', ''), 'loading'));
-pyReady.then(() => { setPyStatus('Python ready', 'ready'); if (state.tab === 'solutions') measureSolutions(); })
-  .catch((err) => { console.error(err); setPyStatus('Python failed to load', 'error'); });
+const pyReady = loadPython((msg) => setPyStatus(msg.replace('…', '').toLowerCase(), 'loading'));
+pyReady.then(() => { setPyStatus('python ready', 'ready'); if (state.tab === 'solutions') measureSolutions(); })
+  .catch((err) => { console.error(err); setPyStatus('python failed to load', 'error'); });
 
 // ================================================================ progress
 function solvedCount() { return LEVELS.filter((l) => state.progress[l.id]).length; }
@@ -105,7 +100,7 @@ function solvedCount() { return LEVELS.filter((l) => state.progress[l.id]).lengt
 function renderProgress() {
   const n = solvedCount();
   $('progressText').textContent = `${n}/${LEVELS.length}`;
-  $('ringFg').style.strokeDashoffset = String(94.25 * (1 - n / LEVELS.length));
+  $('ringFg').style.strokeDashoffset = String(87.97 * (1 - n / LEVELS.length));
 }
 
 function markSolved(id) {
@@ -117,31 +112,57 @@ function markSolved(id) {
 }
 
 // ================================================================ drawer
+// Tracks are collapsible; which ones are open is remembered. The current
+// level's track always opens, and a search opens every track with a match.
 let kbIndex = -1;
+const openTracks = new Set(store.get('codeart-open-tracks', []));
+const saveOpenTracks = () => store.set('codeart-open-tracks', [...openTracks]);
+const CHEVRON = '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M4 2.5L7.5 6 4 9.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
 function renderTracks() {
   const q = $('levelSearch').value.trim().toLowerCase();
+  let shown = 0;
   $('trackList').innerHTML = TRACKS.map((track) => {
     const levels = LEVELS.filter((l) => l.track === track.id && (!q || `${l.title} ${l.concepts.join(' ')} ${l.difficulty} ${track.title}`.toLowerCase().includes(q)));
     if (!levels.length) return '';
+    shown += levels.length;
     const all = LEVELS.filter((l) => l.track === track.id);
     const done = all.filter((l) => state.progress[l.id]).length;
-    return `<section class="track">
-      <div class="track-head"><h3>${esc(track.title)}</h3><span class="bar-mini"><i style="width:${(done / all.length) * 100}%"></i></span><span>${done}/${all.length}</span></div>
-      ${q ? '' : `<p>${esc(track.blurb)}</p>`}
+    const open = q ? true : openTracks.has(track.id);
+    return `<section class="track ${open ? 'open' : ''}" data-track="${track.id}">
+      <button class="track-toggle" aria-expanded="${open}" aria-controls="tl-${track.id}" data-toggle="${track.id}">
+        <span class="track-chev">${CHEVRON}</span>
+        <span class="track-name"><b>${esc(track.title)}</b><span>${esc(track.blurb)}</span></span>
+        <span class="track-count"><span class="bar-mini"><i style="width:${(done / all.length) * 100}%"></i></span>${done}/${all.length}</span>
+      </button>
+      <div class="track-levels" id="tl-${track.id}" ${open ? '' : 'hidden'}>
       ${levels.map((l) => `<button class="lv ${state.level && state.level.id === l.id ? 'active' : ''} ${state.progress[l.id] ? 'done' : ''}" data-id="${l.id}">
           <span class="lv-num">${LEVELS.indexOf(l) + 1}</span>
           <span class="lv-title">${esc(l.title)}</span>
           <span class="diff ${l.difficulty.toLowerCase()}">${l.difficulty}</span>
         </button>`).join('')}
+      </div>
     </section>`;
   }).join('') || '<p class="empty-note">No levels match that search.</p>';
+  const allOpen = TRACKS.every((t) => openTracks.has(t.id));
+  $('toggleAllTracks').textContent = allOpen ? 'collapse all' : 'expand all';
+  $('toggleAllTracks').hidden = !!q;
+  $('levelSummary').textContent = q ? `${shown} match${shown === 1 ? '' : 'es'}` : `${solvedCount()} of ${LEVELS.length} solved`;
   kbIndex = -1;
+}
+
+function toggleTrack(id) {
+  if (openTracks.has(id)) openTracks.delete(id); else openTracks.add(id);
+  saveOpenTracks();
+  renderTracks();
 }
 
 function openDrawer() {
   if (state.mode !== 'levels') setMode('levels');
+  if (state.level) { openTracks.add(state.level.track); saveOpenTracks(); }
   $('drawer').hidden = false;
   $('scrim').hidden = false;
+  $('levelsBtn').setAttribute('aria-expanded', 'true');
   $('levelSearch').value = '';
   renderTracks();
   setTimeout(() => {
@@ -149,10 +170,14 @@ function openDrawer() {
     $('trackList').querySelector('.lv.active')?.scrollIntoView({ block: 'center' });
   }, 0);
 }
-function closeDrawer() { $('drawer').hidden = true; $('scrim').hidden = true; }
+function closeDrawer() {
+  $('drawer').hidden = true;
+  $('scrim').hidden = true;
+  $('levelsBtn').setAttribute('aria-expanded', 'false');
+}
 
 function moveKb(delta) {
-  const items = [...$('trackList').querySelectorAll('.lv')];
+  const items = [...$('trackList').querySelectorAll('.track-levels:not([hidden]) .lv')];
   if (!items.length) return;
   items[kbIndex]?.classList.remove('kb');
   kbIndex = (kbIndex + delta + items.length) % items.length;
@@ -174,23 +199,23 @@ function setTab(tab) {
 function renderProblem() {
   const pane = $('problemPane');
   if (state.mode === 'playground') {
-    pane.innerHTML = `<div class="p-eyebrow">PLAYGROUND</div>
-      <h2 class="p-title">Write anything</h2>
+    pane.innerHTML = `<div class="p-eyebrow"><span class="n">play</span>playground</div>
+      <h2 class="p-title">write anything</h2>
       <div class="prose"><p>Press <strong>Run</strong> and each executed line becomes one step: <strong>Fetch</strong> shows the line, <strong>Decode</strong> explains what it does to memory, and the table <strong>executes</strong> it.</p></div>
-      <div class="examples"><h4>Start from an example</h4>
-      ${EXAMPLES.map((ex, i) => `<button class="lv ${state.example === i ? 'active' : ''}" data-example="${i}"><span class="lv-num">${i + 1}</span><span class="lv-title">${esc(ex.title)}<br><span style="color:var(--muted);font-size:12px">${esc(ex.note)}</span></span><span></span></button>`).join('')}
+      <div class="examples ex-list"><h4>start from an example</h4>
+      ${EXAMPLES.map((ex, i) => `<button class="lv ${state.example === i ? 'active' : ''}" data-example="${i}"><span class="lv-num">${i + 1}</span><span class="lv-title">${esc(ex.title)}<span class="lv-sub">${esc(ex.note)}</span></span><span></span></button>`).join('')}
       </div>`;
     return;
   }
   const l = state.level;
   const idx = LEVELS.indexOf(l);
   pane.innerHTML = `
-    <div class="p-eyebrow"><span>${String(idx + 1).padStart(2, '0')}</span><span>·</span><span>${esc(l.trackTitle)}</span></div>
+    <div class="p-eyebrow"><span class="n">${String(idx + 1).padStart(2, '0')}</span>${esc(l.trackTitle)}</div>
     <h2 class="p-title">${esc(l.title)}${state.progress[l.id] ? '<span class="solved" title="Solved">✓</span>' : ''}</h2>
     <div class="p-meta"><span class="diff ${l.difficulty.toLowerCase()}">${l.difficulty}</span>${l.concepts.map((c) => `<span class="chip">${esc(c)}</span>`).join('')}</div>
     <div class="prose">${md(l.prompt)}</div>
-    <div class="watch"><div class="watch-label">What to watch</div><div class="prose">${md(l.watch)}</div></div>
-    <div class="examples"><h4>Examples</h4>
+    <div class="watch"><div class="watch-label">what to watch</div><div class="prose">${md(l.watch)}</div></div>
+    <div class="examples"><h4>examples</h4>
       ${l.tests.slice(0, 3).map((t) => `<div class="example"><span>in</span><code>${esc(l.fn)}(${t.args.map(pyRepr).map(esc).join(', ')})</code><span>out</span><code>${esc(pyRepr(t.expected))}</code></div>`).join('')}
     </div>
     <div class="level-nav">
@@ -296,6 +321,7 @@ function openLevel(id, { keepTab = false } = {}) {
   editor.setErrorLine(null);
   $('crumbTrack').textContent = level.trackTitle;
   $('crumbTitle').textContent = level.title;
+  $('crumbNum').textContent = String(LEVELS.indexOf(level) + 1).padStart(2, '0');
   $('solCount').textContent = level.solutions.length;
   renderProblem();
   if (!keepTab || state.tab !== 'problem') setTab('problem');
@@ -334,7 +360,7 @@ function viewSolution(index) {
   state.viewing = { name: sol.name };
   editor.value = programFor(l, sol);
   editor.input.readOnly = true;
-  const head = document.querySelector('.editor-head .file');
+  const head = document.querySelector('#winCode .file');
   head.innerHTML = `<i style="background:var(--accent)"></i>solution · ${esc(sol.name)}`;
   if (!$('backBtn')) {
     const back = document.createElement('button');
@@ -351,7 +377,7 @@ function exitViewing({ restore = true } = {}) {
   if (!state.viewing) return;
   state.viewing = null;
   editor.input.readOnly = false;
-  document.querySelector('.editor-head .file').innerHTML = '<i></i>main.py';
+  document.querySelector('#winCode .file').innerHTML = '<i></i>main.py';
   $('backBtn')?.remove();
   if (restore && state.level) editor.value = store.get(draftKey(state.level.id), state.level.starter);
 }
@@ -583,7 +609,7 @@ function applyServerState(data) {
 
 function openMenu() {
   const menu = document.createElement('div');
-  menu.className = 'menu';
+  menu.className = 'menu floating';
   const r = $('accountBtn').getBoundingClientRect();
   menu.style.top = `${r.bottom + 8}px`;
   menu.style.right = `${window.innerWidth - r.right}px`;
@@ -625,6 +651,91 @@ $('authForm').onsubmit = async (e) => {
 };
 account.onChange(renderAccount);
 
+// ================================================================ panels & camera
+// Floating panels leave part of the table uncovered; the camera frames the
+// program inside that free area.
+function updateInsets(rects) {
+  if (!state.scene) return;
+  const desk = $('desk');
+  const W = desk.clientWidth, H = desk.clientHeight;
+  const ins = { top: 0, bottom: 0, left: 0, right: 66 };
+  // each panel claims the desk edge it costs the least screen to keep clear
+  for (const r of Object.values(rects)) {
+    const options = [
+      ['left', (r.right + 12) / W],
+      ['right', (W - r.left + 12) / W],
+      ['top', (r.bottom + 12) / H],
+      ['bottom', (H - r.top + 12) / H],
+    ].sort((a, b) => a[1] - b[1]);
+    const [side, frac] = options[0];
+    const px = frac * (side === 'left' || side === 'right' ? W : H);
+    ins[side] = Math.max(ins[side], px);
+  }
+  const transport = document.querySelector('.transport').getBoundingClientRect();
+  ins.bottom = Math.max(ins.bottom, desk.getBoundingClientRect().bottom - transport.top + 10);
+  // never squeeze the table into less than a third of the screen
+  if (W - ins.left - ins.right < W / 3) { const k = (W * 2 / 3) / (ins.left + ins.right); ins.left *= k; ins.right *= k; }
+  if (H - ins.top - ins.bottom < H / 3) { const k = (H * 2 / 3) / (ins.top + ins.bottom); ins.top *= k; ins.bottom *= k; }
+  state.scene.setInsets(ins);
+}
+
+let insetFrame = 0;
+const panels = new PanelManager($('desk'), {
+  onChange: (rects) => {
+    cancelAnimationFrame(insetFrame);
+    insetFrame = requestAnimationFrame(() => updateInsets(rects));
+  },
+});
+
+function renderCamera(cam) {
+  $('camFollow').classList.toggle('on', cam.follow);
+  $('camFollow').setAttribute('aria-pressed', String(cam.follow));
+  $('camFollow').title = cam.follow ? 'Following the program (F)' : 'Free camera: click to follow the program again (F)';
+  document.querySelectorAll('.cam-view').forEach((b) => b.classList.toggle('on', b.dataset.view === cam.view));
+  const pan = cam.drag === 'pan';
+  $('camDrag').title = pan ? 'Left-drag pans (click: rotate instead)' : 'Left-drag rotates (click: pan instead)';
+  $('camDragIcon').innerHTML = pan
+    ? '<path d="M8 1.5v13M1.5 8h13M8 1.5l-2 2M8 1.5l2 2M8 14.5l-2-2M8 14.5l2-2M1.5 8l2-2M1.5 8l2 2M14.5 8l-2-2M14.5 8l-2 2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>'
+    : '<ellipse cx="8" cy="8" rx="6.5" ry="3" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12.5 4.6l1.2 1.4-1.8.3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="8" cy="8" r="1.4" fill="currentColor"/>';
+}
+
+$('camFollow').onclick = () => state.scene?.setFollow(!state.scene.follow);
+$('camZoomIn').onclick = () => state.scene?.zoomBy(0.75);
+$('camZoomOut').onclick = () => state.scene?.zoomBy(1.33);
+$('camRotL').onclick = () => state.scene?.rotateBy(Math.PI / 4);
+$('camRotR').onclick = () => state.scene?.rotateBy(-Math.PI / 4);
+document.querySelectorAll('.cam-view').forEach((b) => { b.onclick = () => state.scene?.setView(b.dataset.view); });
+$('camDrag').onclick = () => state.scene?.setDragMode(state.scene.dragMode === 'pan' ? 'rotate' : 'pan');
+$('camHelp').onclick = (e) => {
+  e.stopPropagation();
+  const card = $('camHelpCard');
+  card.hidden = !card.hidden;
+  $('camHelp').setAttribute('aria-expanded', String(!card.hidden));
+};
+$('viewport').addEventListener('keydown', (e) => {
+  if (state.scene?.handleKey(e)) { e.preventDefault(); e.stopPropagation(); }
+});
+$('viewport').addEventListener('pointerdown', () => $('viewport').focus({ preventScroll: true }));
+
+// layout presets
+$('layoutBtn').onclick = (e) => {
+  e.stopPropagation();
+  const menu = $('layoutMenu');
+  menu.hidden = !menu.hidden;
+  $('layoutBtn').setAttribute('aria-expanded', String(!menu.hidden));
+};
+$('layoutMenu').onclick = (e) => {
+  const b = e.target.closest('[data-layout]');
+  if (!b) return;
+  panels.setPreset(b.dataset.layout);
+  $('layoutMenu').hidden = true;
+  $('layoutBtn').setAttribute('aria-expanded', 'false');
+};
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.menu-wrap')) { $('layoutMenu').hidden = true; $('layoutBtn').setAttribute('aria-expanded', 'false'); }
+  if (!e.target.closest('.cam')) { $('camHelpCard').hidden = true; $('camHelp').setAttribute('aria-expanded', 'false'); }
+});
+
 // ================================================================ wiring
 $('runBtn').onclick = () => visualize();
 $('checkBtn').onclick = () => check();
@@ -646,7 +757,6 @@ $('speedBtn').onclick = () => {
   state.speed = SPEEDS[(SPEEDS.indexOf(state.speed) + 1) % SPEEDS.length];
   $('speedBtn').textContent = `${state.speed}×`;
 };
-$('recenterBtn').onclick = () => { state.scene?.recenter(); $('recenterBtn').hidden = true; };
 $('levelsBtn').onclick = openDrawer;
 $('scrim').onclick = closeDrawer;
 $('levelSearch').oninput = renderTracks;
@@ -654,11 +764,22 @@ $('levelSearch').onkeydown = (e) => {
   if (e.key === 'ArrowDown') { e.preventDefault(); moveKb(1); }
   else if (e.key === 'ArrowUp') { e.preventDefault(); moveKb(-1); }
   else if (e.key === 'Enter') {
-    const target = $('trackList').querySelector('.lv.kb') || $('trackList').querySelector('.lv');
+    const target = $('trackList').querySelector('.lv.kb') || $('trackList').querySelector('.track-levels:not([hidden]) .lv');
     if (target) { openLevel(target.dataset.id); closeDrawer(); }
   }
 };
-$('trackList').onclick = (e) => { const b = e.target.closest('.lv'); if (b) { openLevel(b.dataset.id); closeDrawer(); } };
+$('trackList').onclick = (e) => {
+  const t = e.target.closest('[data-toggle]');
+  if (t) { toggleTrack(t.dataset.toggle); return; }
+  const b = e.target.closest('.lv');
+  if (b) { openLevel(b.dataset.id); closeDrawer(); }
+};
+$('toggleAllTracks').onclick = () => {
+  const allOpen = TRACKS.every((t) => openTracks.has(t.id));
+  TRACKS.forEach((t) => (allOpen ? openTracks.delete(t.id) : openTracks.add(t.id)));
+  saveOpenTracks();
+  renderTracks();
+};
 $('problemPane').onclick = (e) => {
   const nav = e.target.closest('[data-nav]');
   if (nav) { openLevel(LEVELS[LEVELS.indexOf(state.level) + Number(nav.dataset.nav)].id); return; }
@@ -697,7 +818,11 @@ $('themeBtn').onclick = () => {
 };
 document.addEventListener('keydown', (e) => {
   if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); $('drawer').hidden ? openDrawer() : closeDrawer(); return; }
-  if (e.key === 'Escape' && !$('drawer').hidden) { closeDrawer(); return; }
+  if (e.key === 'Escape') {
+    if (!$('drawer').hidden) { closeDrawer(); return; }
+    $('layoutMenu').hidden = true;
+    $('camHelpCard').hidden = true;
+  }
   if (e.target.closest('textarea, input, select, dialog')) return;
   if (e.key === ' ') { e.preventDefault(); state.playing ? stop() : play(); }
   else if (e.key === 'ArrowRight') { stop(); show(state.idx + 1); }

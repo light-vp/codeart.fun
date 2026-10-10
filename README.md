@@ -7,8 +7,8 @@ straight from `main`. Setup steps are in [DEPLOY.md](DEPLOY.md).
 
 | | |
 | --- | --- |
-| ![Landing](screenshots/landing.png) | ![Two Sum](screenshots/two-sum.png) |
-| ![Ranked solutions](screenshots/solutions.png) | ![Linked list, light theme](screenshots/linked-list-light.png) |
+| ![Landing](screenshots/landing.png) | ![Workspace](screenshots/workspace.png) |
+| ![Panels rearranged](screenshots/panels-rearranged.png) | ![Night theme](screenshots/night.png) |
 
 ## Features
 
@@ -27,6 +27,17 @@ straight from `main`. Setup steps are in [DEPLOY.md](DEPLOY.md).
 - **82 ranked solutions**, tiered as *Optimal* / *Best time* / *Best space* /
   *Alternative* / *Brute force*. Each lists its time and space complexity and
   a step count measured on the example. Any solution can be animated.
+- **Your workspace, your way.** The problem, editor and CPU panels float over
+  the table: drag them by their header, resize from any edge, snap them to the
+  edges or each other, minimise them, or pick a layout preset. The layout is
+  remembered per browser.
+- **Camera control.** Follow the program automatically, or take over: drag to
+  pan, right-drag to rotate, scroll to zoom towards the pointer, double-click a
+  block to fly to it, switch between angled, top-down and front views, or use
+  `W A S D` / `Q E` / `+ −` after clicking the table.
+- **Same look as vaibhav.co.uk.** Cream paper, ink outlines, neon and highlighter
+  accents, hard offset shadows, cel-shaded blocks; day and night themes. The
+  fonts (Bungee, Space Grotesk, JetBrains Mono) are self-hosted in `fonts/`.
 - **Accounts (optional).** A PHP/MySQL API stores progress, editor drafts
   and every submission. Without the API, everything still works and lives in
   `localStorage`.

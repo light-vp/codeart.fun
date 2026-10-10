@@ -1,23 +1,23 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>codeart — see your code move</title>
-    <meta name="description" content="Learn Python by watching it run. Every line you write plays out as 3D blocks: variables, lists, dicts, loops and the call stack.">
+    <meta name="description" content="Learn Python by watching it run. Every line you write plays out as blocks on a table: variables, lists, dicts, loops and the call stack.">
     <meta property="og:title" content="codeart — see your code move">
-    <meta property="og:description" content="Learn Python by watching it run, line by line, as 3D blocks.">
+    <meta property="og:description" content="Learn Python by watching it run, line by line, as blocks on a table.">
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+    <link rel="preload" href="fonts/bungee-400-latin.126eec70.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="fonts/space-grotesk-400-latin.06408904.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="css/fonts.css">
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/landing.css">
     <script>
         (function () {
             var t = null;
             try { t = localStorage.getItem('codeart-theme'); } catch (e) {}
-            document.documentElement.setAttribute('data-theme', t === 'light' ? 'light' : 'dark');
+            document.documentElement.setAttribute('data-theme', t === 'dark' ? 'dark' : 'light');
         })();
     </script>
     <script type="importmap">
@@ -32,90 +32,90 @@
 <body>
     <header class="nav">
         <a class="logo" href="./"><span class="logo-glyph" aria-hidden="true"><i></i><i></i><i></i><i></i></span><b>codeart</b></a>
-        <nav class="nav-links">
-            <a href="#how">How it works</a>
-            <a href="#solutions">Solutions</a>
-            <a href="#tracks">Tracks</a>
-            <a href="app.html#playground">Playground</a>
+        <nav class="nav-links" aria-label="Sections">
+            <a href="#how"><span>01</span> how</a>
+            <a href="#solutions"><span>02</span> solutions</a>
+            <a href="#tracks"><span>03</span> tracks</a>
         </nav>
         <div class="nav-right">
-            <button class="icon-btn" id="themeBtn" aria-label="Toggle theme" title="Toggle theme"><svg viewBox="0 0 16 16"><path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13zm0 1.5v10a5 5 0 0 1 0-10z" fill="currentColor"/></svg></button>
-            <a class="btn primary" href="app.html">Start learning</a>
+            <button class="icon-btn" id="themeBtn" aria-label="Toggle day or night theme" title="Toggle day / night"><svg viewBox="0 0 16 16"><path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13zm0 1.5v10a5 5 0 0 1 0-10z" fill="currentColor"/></svg></button>
+            <a class="btn primary" href="app.html">start learning</a>
         </div>
     </header>
 
     <main>
         <section class="hero">
             <div class="hero-copy">
-                <p class="eyebrow"><span class="dot"></span>Python, visualised</p>
-                <h1>See your code <em>move.</em></h1>
-                <p class="lede">Write Python and watch every line execute on a table of blocks — variables, lists, dicts, pointers and the call stack, one step at a time. No more guessing what <code>print</code> left out.</p>
+                <p class="eyebrow"><span class="tag neon">python</span> watch it run, line by line</p>
+                <h1>see your<br>code <span class="hl">move.</span></h1>
+                <p class="lede">Write Python and watch every line play out as blocks on a table: variables, lists, dicts, pointers and the call stack, one step at a time. No more guessing what <code>print</code> left out.</p>
                 <div class="hero-cta">
-                    <a class="btn primary lg" href="app.html">Start level one <span aria-hidden="true">→</span></a>
-                    <a class="btn lg" href="app.html#playground">Open the playground</a>
+                    <a class="btn lg primary" href="app.html">start level one →</a>
+                    <a class="btn lg" href="app.html#playground">open the playground</a>
                 </div>
                 <dl class="hero-stats">
                     <div><dt id="statLevels">36</dt><dd>levels</dd></div>
                     <div><dt id="statSolutions">82</dt><dd>ranked solutions</dd></div>
-                    <div><dt>0</dt><dd>installs — runs in your browser</dd></div>
+                    <div><dt>0</dt><dd>installs, it runs in your browser</dd></div>
                 </dl>
             </div>
 
-            <figure class="hero-demo" aria-label="Animated demo of bubble sort running">
+            <figure class="hero-demo panel" aria-label="Animated demo of bubble sort running">
+                <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
                 <div class="demo-stage" id="heroStage"></div>
-                <div class="demo-code glass">
-                    <div class="demo-code-head"><i></i><i></i><i></i><span>bubble_sort.py</span></div>
+                <div class="demo-code">
+                    <div class="demo-code-head"><span class="tag">bubble_sort.py</span></div>
                     <pre id="heroCode"></pre>
                 </div>
-                <div class="demo-decode glass"><span class="stage-label">Decode</span><div id="heroDecode">—</div></div>
+                <div class="demo-decode"><span class="stage-label">decode</span><div id="heroDecode">—</div></div>
             </figure>
         </section>
 
         <section class="how" id="how">
             <div class="section-head">
-                <p class="eyebrow">How it reads</p>
-                <h2>A tiny CPU for every line.</h2>
+                <p class="eyebrow"><span class="num">01</span> how it reads</p>
+                <h2>a tiny cpu for every line.</h2>
                 <p>Real processors fetch an instruction, decode it, then execute it. codeart does the same for your Python, so cause and effect are never more than one step apart.</p>
             </div>
             <ol class="cycle">
-                <li>
-                    <span class="cycle-tag fetch">01 · Fetch</span>
-                    <h3>Find the line</h3>
-                    <p>The editor highlights exactly which line runs next — loops, branches and function calls included.</p>
+                <li class="panel">
+                    <span class="cycle-tag" style="--c: var(--t-int)">fetch</span>
+                    <h3>find the line</h3>
+                    <p>The editor highlights exactly which line runs next: loops, branches and function calls included.</p>
                 </li>
-                <li>
-                    <span class="cycle-tag decode">02 · Decode</span>
-                    <h3>Say what it means</h3>
+                <li class="panel">
+                    <span class="cycle-tag" style="--c: var(--hi)">decode</span>
+                    <h3>say what it means</h3>
                     <p>Plain-English operations: <code>APPEND 7 → end of nums</code>, <code>SWAP arr[0] ⇄ arr[1]</code>, <code>need in seen → True</code>.</p>
                 </li>
-                <li>
-                    <span class="cycle-tag exec">03 · Execute</span>
-                    <h3>Watch memory change</h3>
-                    <p>Blocks drop into lists, hop when swapped and fly into variables. Stack frames pile up and pop. Scrub backwards any time.</p>
+                <li class="panel">
+                    <span class="cycle-tag" style="--c: var(--neon)">execute</span>
+                    <h3>watch memory change</h3>
+                    <p>Blocks drop into lists, hop when swapped and fly into variables. Stack frames pile up and pop. Scrub backwards any time, and move the camera wherever you like.</p>
                 </li>
             </ol>
         </section>
 
         <section class="solutions" id="solutions">
             <div class="section-head">
-                <p class="eyebrow">Every problem, ranked</p>
-                <h2>Brute force to optimal, side by side.</h2>
+                <p class="eyebrow"><span class="num">02</span> every problem, ranked</p>
+                <h2>brute force to optimal, side by side.</h2>
                 <p>Each level comes with several approaches, tagged by what they optimise for. Animate any of them and compare the work they do on the same input.</p>
             </div>
-            <div class="compare">
-                <div class="compare-head"><span class="diff easy">Easy</span><b>Climbing Stairs</b><span class="muted">climb_stairs(5)</span></div>
+            <div class="compare panel">
+                <div class="compare-head"><span class="diff easy">easy</span><b>Climbing Stairs</b><code>climb_stairs(5)</code></div>
                 <div class="compare-row">
-                    <span class="tier optimal">★ Optimal</span>
+                    <span class="tier optimal">★ optimal</span>
                     <div class="compare-name"><b>Two rolling variables</b><span>time O(n) · space O(1)</span></div>
                     <div class="compare-bar"><i style="--w:30%"></i></div><span class="compare-n">14 steps</span>
                 </div>
                 <div class="compare-row">
-                    <span class="tier time">Best time</span>
+                    <span class="tier time">best time</span>
                     <div class="compare-name"><b>Bottom-up table</b><span>time O(n) · space O(n)</span></div>
                     <div class="compare-bar"><i style="--w:55%"></i></div><span class="compare-n">26 steps</span>
                 </div>
                 <div class="compare-row">
-                    <span class="tier brute">Brute force</span>
+                    <span class="tier brute">brute force</span>
                     <div class="compare-name"><b>Plain recursion</b><span>time O(2ⁿ) · space O(n)</span></div>
                     <div class="compare-bar brute"><i style="--w:100%"></i></div><span class="compare-n">47 steps</span>
                 </div>
@@ -124,21 +124,21 @@
 
         <section class="tracks" id="tracks">
             <div class="section-head">
-                <p class="eyebrow">The path</p>
-                <h2>From your first variable to dynamic programming.</h2>
+                <p class="eyebrow"><span class="num">03</span> the path</p>
+                <h2>from your first variable to dynamic programming.</h2>
             </div>
             <div class="track-grid" id="trackGrid"></div>
         </section>
 
         <section class="cta">
-            <h2>Stop imagining memory.<br><em>Look at it.</em></h2>
-            <a class="btn primary lg" href="app.html">Start level one <span aria-hidden="true">→</span></a>
+            <h2>stop imagining memory.<br><span class="hl">look at it.</span></h2>
+            <a class="btn lg primary" href="app.html">start level one →</a>
         </section>
     </main>
 
     <footer class="foot">
         <span class="logo"><span class="logo-glyph" aria-hidden="true"><i></i><i></i><i></i><i></i></span><b>codeart</b></span>
-        <span class="muted">Built by <a href="https://github.com/light-vp">Vaibhav Patel</a> · Python runs locally via Pyodide</span>
+        <span>made by <a href="https://vaibhav.co.uk">vaibhav patel</a> · python runs locally via pyodide</span>
     </footer>
 
     <script type="module" src="js/landing.js"></script>
