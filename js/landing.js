@@ -1,4 +1,5 @@
 import { highlightPython } from './editor.js';
+import { bindLookButtons, sceneTheme } from './look.js';
 import { decodeStep, layoutStep, TokenBook } from './model.js';
 import { LEVELS, TRACKS } from '../levels/index.js';
 
@@ -10,7 +11,7 @@ const progress = (() => { try { return JSON.parse(localStorage.getItem('codeart-
 $('statLevels').textContent = LEVELS.length;
 $('statSolutions').textContent = LEVELS.reduce((n, l) => n + l.solutions.length, 0);
 $('trackGrid').innerHTML = TRACKS.map((t, i) => `
-  <a class="track-card reveal" href="app.html#${t.levels[0].id}">
+  <a class="track-card ink-panel reveal" href="app.html#${t.levels[0].id}">
     <span class="track-num">${String(i + 1).padStart(2, '0')}</span>
     <span class="arrow" aria-hidden="true">↗</span>
     <h3>${esc(t.title)}</h3>
@@ -24,13 +25,8 @@ addEventListener('scroll', () => nav.classList.toggle('scrolled', scrollY > 8), 
 const io = new IntersectionObserver((entries) => entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: 0.25 });
 document.querySelectorAll('.reveal, .compare, .cycle li, .section-head').forEach((el) => { if (!el.classList.contains('compare')) el.classList.add('reveal'); io.observe(el); });
 
-// ---- theme
-$('themeBtn').onclick = () => {
-  const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
-  document.documentElement.dataset.theme = next;
-  try { localStorage.setItem('codeart-theme', next); } catch { /* ignore */ }
-  hero.scene?.setTheme(next);
-};
+// ---- theme + design style
+bindLookButtons({ themeBtn: $('themeBtn'), styleBtn: $('styleBtn'), onChange: () => hero.scene?.setTheme(sceneTheme()) });
 
 // ---- hero: replay a pre-recorded trace on loop
 const hero = { scene: null };
@@ -43,7 +39,7 @@ async function startHero() {
   if (document.fonts?.ready) await Promise.race([document.fonts.ready, new Promise((r) => setTimeout(r, 1500))]);
   const { BlockScene } = await import('./scene.js');
   hero.scene = new BlockScene($('heroStage'), { interactive: false });
-  hero.scene.setTheme(document.documentElement.dataset.theme);
+  hero.scene.setTheme(sceneTheme());
   const codeCard = document.querySelector('.demo-code');
   const fitHero = () => {
     const stage = $('heroStage').getBoundingClientRect();

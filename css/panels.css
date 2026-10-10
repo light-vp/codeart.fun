@@ -48,6 +48,17 @@
 .ws-float .fpanel::before { top: -9px; left: -9px; border-top-width: var(--pnl-stroke); border-left-width: var(--pnl-stroke); }
 .ws-float .fpanel::after { bottom: -9px; right: -9px; border-bottom-width: var(--pnl-stroke); border-right-width: var(--pnl-stroke); }
 
+/* minimal style: hairline cards instead of inked comic panels */
+:root[data-style="minimal"] .ws {
+    --pnl-stroke: 1px;
+    --pnl-ink: var(--line-2);
+    --pnl-shadow: var(--shadow-sm);
+    --pnl-lift: var(--shadow-lg);
+}
+:root[data-style="minimal"] .ws-float .fpanel { border-radius: var(--r); }
+:root[data-style="minimal"] .ws-float .fpanel::before,
+:root[data-style="minimal"] .ws-float .fpanel::after { display: none; }
+
 /* drag handles */
 .ws-float [data-drag] { cursor: grab; touch-action: none; }
 .ws-float [data-drag] :is(button, a, input) { cursor: pointer; }
@@ -117,6 +128,9 @@ body[data-panel-cursor="nw"], body[data-panel-cursor="se"] { cursor: nwse-resize
 .pill:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--ink, var(--text)); }
 .pill:active { transform: translate(2px, 2px); box-shadow: 0 0 0 var(--ink, var(--text)); }
 .pill:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+:root[data-style="minimal"] .pill { border: 1px solid var(--line-2); background: var(--surface-2); color: var(--text-2); box-shadow: none; }
+:root[data-style="minimal"] .pill:hover { transform: none; background: var(--surface-3); color: var(--text); box-shadow: none; }
 
 @media (max-width: 920px) {
     #layoutBtn { display: none; }
