@@ -1,23 +1,31 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="dark" data-style="minimal">
 <head>
     <meta charset="UTF-8">
-    <meta name="theme-color" content="#f3ecdd">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>codeart — Learn</title>
     <meta name="description" content="Write Python and watch it run as 3D blocks: variables, lists, dicts, loops and the call stack, step by step.">
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
-    <link rel="preload" href="fonts/space-grotesk-400-latin.06408904.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="fonts/jetbrains-mono-700-ascii.29e65f4a.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/fonts.css">
-    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/base.css" data-look="minimal">
+    <link rel="stylesheet" href="css/sketch/base.css" data-look="sketch">
     <link rel="stylesheet" href="css/app.css">
+    <link rel="stylesheet" href="css/sketch/app.css" data-look="sketch">
     <link rel="stylesheet" href="css/panels.css">
     <script>
         (function () {
-            var t = null;
-            try { t = localStorage.getItem('codeart-theme'); } catch (e) {}
-            document.documentElement.setAttribute('data-theme', t === 'dark' ? 'dark' : 'light');
+            // the look before first paint; js/look.js switches it later
+            var s = null, t = null, d = document.documentElement;
+            try { s = localStorage.getItem('codeart-style'); t = localStorage.getItem('codeart-theme'); } catch (e) {}
+            if (s !== 'sketch') s = 'minimal';
+            if (t !== 'light' && t !== 'dark') t = s === 'sketch' ? 'light' : 'dark';
+            d.setAttribute('data-style', s);
+            d.setAttribute('data-theme', t);
+            var links = document.querySelectorAll('link[data-look]');
+            for (var i = 0; i < links.length; i++) links[i].disabled = links[i].getAttribute('data-look') !== s;
         })();
     </script>
     <script type="importmap">
@@ -53,6 +61,7 @@
                 <span id="progressText">0/36</span>
             </span>
             <button class="pill" id="layoutBtn" title="Put the panels back where they started" hidden>Reset layout</button>
+            <button class="icon-btn" id="styleBtn" aria-label="Switch design style" title="Switch design style"><svg viewBox="0 0 16 16"><path d="M13.6 1.4a1.3 1.3 0 0 0-1.9 0L6.5 6.6l2.9 2.9 5.2-5.2a1.3 1.3 0 0 0 0-1.9zM5.6 7.6c-1.7 0-2.9 1.2-2.9 2.8 0 1.2-.6 2-1.7 2.6 1 .9 2.3 1.5 3.7 1.5 2.2 0 3.8-1.6 3.8-3.6z" fill="currentColor"/></svg></button>
             <button class="icon-btn" id="themeBtn" title="Toggle theme" aria-label="Toggle theme">
                 <svg viewBox="0 0 16 16"><path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13zm0 1.5v10a5 5 0 0 1 0-10z" fill="currentColor"/></svg>
             </button>

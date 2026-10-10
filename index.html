@@ -1,24 +1,32 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="dark" data-style="minimal">
 <head>
     <meta charset="UTF-8">
-    <meta name="theme-color" content="#f3ecdd">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>codeart — see your code move</title>
     <meta name="description" content="Learn Python by watching it run. Every line you write plays out as 3D blocks: variables, lists, dicts, loops and the call stack.">
     <meta property="og:title" content="codeart — see your code move">
     <meta property="og:description" content="Learn Python by watching it run, line by line, as 3D blocks.">
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
-    <link rel="preload" href="fonts/space-grotesk-400-latin.06408904.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="fonts/jetbrains-mono-700-ascii.29e65f4a.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/fonts.css">
-    <link rel="stylesheet" href="css/base.css">
-    <link rel="stylesheet" href="css/landing.css">
+    <link rel="stylesheet" href="css/base.css" data-look="minimal">
+    <link rel="stylesheet" href="css/sketch/base.css" data-look="sketch">
+    <link rel="stylesheet" href="css/landing.css" data-look="minimal">
+    <link rel="stylesheet" href="css/sketch/landing.css" data-look="sketch">
     <script>
         (function () {
-            var t = null;
-            try { t = localStorage.getItem('codeart-theme'); } catch (e) {}
-            document.documentElement.setAttribute('data-theme', t === 'dark' ? 'dark' : 'light');
+            // the look before first paint; js/look.js switches it later
+            var s = null, t = null, d = document.documentElement;
+            try { s = localStorage.getItem('codeart-style'); t = localStorage.getItem('codeart-theme'); } catch (e) {}
+            if (s !== 'sketch') s = 'minimal';
+            if (t !== 'light' && t !== 'dark') t = s === 'sketch' ? 'light' : 'dark';
+            d.setAttribute('data-style', s);
+            d.setAttribute('data-theme', t);
+            var links = document.querySelectorAll('link[data-look]');
+            for (var i = 0; i < links.length; i++) links[i].disabled = links[i].getAttribute('data-look') !== s;
         })();
     </script>
     <script type="importmap">
@@ -34,12 +42,13 @@
     <header class="nav">
         <a class="logo" href="./"><span class="logo-glyph" aria-hidden="true"><i></i><i></i><i></i><i></i></span><b>codeart</b></a>
         <nav class="nav-links">
-            <a href="#how" data-num="01">how it works</a>
-            <a href="#solutions" data-num="02">solutions</a>
-            <a href="#tracks" data-num="03">tracks</a>
-            <a href="app.html#playground" data-num="04">playground</a>
+            <a href="#how" data-num="01">How it works</a>
+            <a href="#solutions" data-num="02">Solutions</a>
+            <a href="#tracks" data-num="03">Tracks</a>
+            <a href="app.html#playground" data-num="04">Playground</a>
         </nav>
         <div class="nav-right">
+            <button class="icon-btn" id="styleBtn" aria-label="Switch design style" title="Switch design style"><svg viewBox="0 0 16 16"><path d="M13.6 1.4a1.3 1.3 0 0 0-1.9 0L6.5 6.6l2.9 2.9 5.2-5.2a1.3 1.3 0 0 0 0-1.9zM5.6 7.6c-1.7 0-2.9 1.2-2.9 2.8 0 1.2-.6 2-1.7 2.6 1 .9 2.3 1.5 3.7 1.5 2.2 0 3.8-1.6 3.8-3.6z" fill="currentColor"/></svg></button>
             <button class="icon-btn" id="themeBtn" aria-label="Toggle theme" title="Toggle theme"><svg viewBox="0 0 16 16"><path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13zm0 1.5v10a5 5 0 0 1 0-10z" fill="currentColor"/></svg></button>
             <a class="btn primary" href="app.html">Start learning</a>
         </div>
@@ -48,7 +57,7 @@
     <main>
         <section class="hero">
             <div class="hero-copy">
-                <p class="eyebrow"><span class="dot"></span>python, visualised</p>
+                <p class="eyebrow"><span class="dot"></span>Python, visualised</p>
                 <h1>See your code <em>move.</em></h1>
                 <p class="lede">Write Python and watch every line execute on a table of blocks — variables, lists, dicts, pointers and the call stack, one step at a time. No more guessing what <code>print</code> left out.</p>
                 <div class="hero-cta">
@@ -74,7 +83,7 @@
 
         <section class="how" id="how">
             <div class="section-head">
-                <p class="eyebrow">01 · how it reads</p>
+                <p class="eyebrow" data-num="01">How it reads</p>
                 <h2>A tiny CPU for every line.</h2>
                 <p>Real processors fetch an instruction, decode it, then execute it. codeart does the same for your Python, so cause and effect are never more than one step apart.</p>
             </div>
@@ -99,7 +108,7 @@
 
         <section class="solutions" id="solutions">
             <div class="section-head">
-                <p class="eyebrow">02 · every problem, ranked</p>
+                <p class="eyebrow" data-num="02">Every problem, ranked</p>
                 <h2>Brute force to optimal, side by side.</h2>
                 <p>Each level comes with several approaches, tagged by what they optimise for. Animate any of them and compare the work they do on the same input.</p>
             </div>
@@ -125,7 +134,7 @@
 
         <section class="tracks" id="tracks">
             <div class="section-head">
-                <p class="eyebrow">03 · the path</p>
+                <p class="eyebrow" data-num="03">The path</p>
                 <h2>From your first variable to dynamic programming.</h2>
             </div>
             <div class="track-grid" id="trackGrid"></div>

@@ -1,301 +1,199 @@
-/* ===== codeart — shared design tokens & primitives =====
-   The same visual language as vaibhav.co.uk (src/styles/tokens.css there):
-   a manga / cel-shaded sketchbook. Four colours (cream paper, ink, neon,
-   highlighter), 2.5px ink strokes, hard offset shadows that are never
-   blurred, mono lowercase pill buttons, comic panels with neon corner
-   brackets. Fonts come from css/fonts.css. */
+/* ===== codeart — shared design tokens & primitives ===== */
 :root {
-    color-scheme: light;
-    --paper: #f3ecdd;          /* cream paper background */
-    --paper-2: #ebe2cd;        /* slightly darker cream */
-    --paper-3: #e2d6bc;        /* wells, tracks, inactive fills */
-    --ink: #111111;            /* manga ink */
-    --ink-soft: #2a2a2a;
-    --neon: #ff2e63;           /* sakura / neon accent */
-    --neon-soft: #ffe5ec;
-    --hi: #ffd84d;             /* highlighter yellow (sparingly) */
-    --hi-soft: rgba(255, 216, 77, 0.45);
-    --on-colour: #111111;      /* text on neon/hi/data fills stays ink in both themes */
-
-    --text: var(--ink);
-    --text-muted: #6a6358;
-    --rule: rgba(17, 17, 17, 0.16);   /* hairlines inside a panel */
-    --rule-2: rgba(17, 17, 17, 0.34);
-    --dots: rgba(17, 17, 17, 0.07);   /* paper texture */
-
-    --b: 2.5px;                /* base ink stroke */
-    --b-thin: 1.5px;
-    --r: 14px;                 /* panel radius */
-    --r-sm: 8px;
-    --shadow: 6px 6px 0 0 var(--ink);
-    --shadow-sm: 3px 3px 0 0 var(--ink);
-    --shadow-lift: 9px 9px 0 0 var(--ink);
-    --shadow-neon: 5px 5px 0 0 var(--neon);
-
-    --font-display: 'Bungee', 'Space Grotesk', system-ui, sans-serif;
-    --font-body: 'Space Grotesk', system-ui, sans-serif;
-    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
-
-    /* data types: the same accents vaibhav.co.uk uses for its project cards */
-    --t-int: #4f7cff;
-    --t-float: #22d3ee;
-    --t-str: #ffd84d;
-    --t-bool: #3fae5a;
-    --t-none: #cfc6b2;
-    --t-ref: #d8ccb2;
-    --t-fn: #c084fc;
-
-    --ok: #2f9e55;
-    --ok-soft: rgba(63, 174, 90, 0.18);
-    --bad: #e0244f;
-    --bad-soft: rgba(255, 46, 99, 0.14);
-
-    /* syntax */
-    --tk-kw: #d0174a;
-    --tk-str: #9a6400;
-    --tk-num: #2f5fd0;
-    --tk-com: #9b937f;
-    --tk-def: #147a6c;
-    --tk-bi: #7c3aed;
-    --tk-op: #6a6358;
-
-    --z-header: 150;
-    --z-overlay: 200;
-
-    /* ---- older names, kept so page CSS reads the same tokens ---- */
-    --bg: var(--paper);
-    --surface: var(--paper);
-    --surface-2: var(--paper-2);
-    --surface-3: var(--paper-3);
-    --line: var(--rule);
-    --line-2: var(--rule-2);
-    --text-2: var(--ink-soft);
-    --muted: var(--text-muted);
-    --accent: var(--neon);
-    --accent-ink: #ffffff;
-    --accent-soft: var(--neon-soft);
-    --cool: var(--ink);
-    --cool-soft: var(--hi-soft);
-    --teal: #147a6c;
-    --glass: var(--paper);
-    --shadow-lg: var(--shadow);
-    --font: var(--font-body);
-    --mono: var(--font-mono);
-    --r-lg: var(--r);
-}
-
-/* night: vaibhav.co.uk's [data-theme='night'] — the paper goes dark and the
-   ink turns cream; neon and highlighter stay put. */
-:root[data-theme="dark"] {
     color-scheme: dark;
-    --paper: #131311;
-    --paper-2: #0b0b0a;
-    --paper-3: #22211d;
-    --ink: #f3ecdd;
-    --ink-soft: #d8d0bd;
-    --neon-soft: rgba(255, 46, 99, 0.16);
-    --text-muted: #9b937f;
-    --rule: rgba(243, 236, 221, 0.16);
-    --rule-2: rgba(243, 236, 221, 0.34);
-    --dots: rgba(243, 236, 221, 0.06);
-    --t-none: #8a8270;
-    --t-ref: #3a372f;
-    --ok: #57c97b;
-    --bad: #ff5c80;
-    --tk-kw: #ff6f93;
-    --tk-str: #ffd84d;
-    --tk-num: #8fb0ff;
-    --tk-com: #7d7666;
-    --tk-def: #5fe0c9;
-    --tk-bi: #c9a3ff;
-    --tk-op: #9b937f;
-    --teal: #5fe0c9;
+    --bg: #0b0c10;
+    --surface: #111318;
+    --surface-2: #15181e;
+    --surface-3: #1b1e26;
+    --line: #22252e;
+    --line-2: #2e323d;
+    --text: #e8e9ec;
+    --text-2: #a7abb5;
+    --muted: #6d727e;
+    --accent: #ffb224;
+    --accent-ink: #1b1202;
+    --accent-soft: rgba(255, 178, 36, 0.12);
+    --cool: #8b9cff;
+    --cool-soft: rgba(139, 156, 255, 0.14);
+    --ok: #52d6a4;
+    --ok-soft: rgba(82, 214, 164, 0.13);
+    --bad: #ff6b6b;
+    --bad-soft: rgba(255, 107, 107, 0.13);
+    --teal: #3fc1ad;
+    --glass: rgba(17, 19, 24, 0.72);
+    --shadow-lg: 0 24px 60px -20px rgba(0, 0, 0, 0.6), 0 2px 6px rgba(0, 0, 0, 0.25);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+
+    --t-int: #7c8cff;
+    --t-float: #3fc1ad;
+    --t-str: #f2a65a;
+    --t-bool: #7dd36a;
+    --t-none: #6b7080;
+    --t-ref: #2b2f3a;
+    --t-fn: #b48cff;
+
+    --tk-kw: #ff8fb3;
+    --tk-str: #f2c27a;
+    --tk-num: #9aa8ff;
+    --tk-com: #5c6170;
+    --tk-def: #7fe0cf;
+    --tk-bi: #c3a6ff;
+    --tk-op: #8a8f9b;
+
+    --font: 'Geist', 'Inter', system-ui, -apple-system, sans-serif;
+    --mono: 'Geist Mono', 'JetBrains Mono', ui-monospace, monospace;
+    --serif: 'Instrument Serif', Georgia, serif;
+    --r-sm: 6px;
+    --r: 10px;
+    --r-lg: 16px;
 }
 
-*, *::before, *::after { box-sizing: border-box; }
+:root[data-theme="light"] {
+    color-scheme: light;
+    --bg: #f3f1ec;
+    --surface: #fbfaf7;
+    --surface-2: #f5f3ee;
+    --surface-3: #ece9e2;
+    --line: #e2ded5;
+    --line-2: #d3cec2;
+    --text: #17181c;
+    --text-2: #4c4e57;
+    --muted: #8a8478;
+    --accent: #e8930c;
+    --accent-ink: #ffffff;
+    --accent-soft: rgba(232, 147, 12, 0.12);
+    --cool: #5b6cff;
+    --cool-soft: rgba(91, 108, 255, 0.1);
+    --ok: #1f9d6f;
+    --ok-soft: rgba(31, 157, 111, 0.1);
+    --bad: #d64545;
+    --bad-soft: rgba(214, 69, 69, 0.1);
+    --glass: rgba(251, 250, 247, 0.8);
+    --shadow-lg: 0 24px 60px -24px rgba(60, 45, 20, 0.28), 0 2px 6px rgba(60, 45, 20, 0.08);
+    --shadow-sm: 0 1px 2px rgba(60, 45, 20, 0.08);
+    --t-ref: #3b4050;
+    --tk-kw: #c2185b;
+    --tk-str: #b06000;
+    --tk-num: #3949ab;
+    --tk-com: #a39e93;
+    --tk-def: #00796b;
+    --tk-bi: #6a3fc1;
+    --tk-op: #8a8478;
+}
+
+* { box-sizing: border-box; }
 html, body { margin: 0; }
 body {
-    font-family: var(--font-body);
-    font-size: 15px;
-    line-height: 1.55;
+    background: var(--bg);
     color: var(--text);
-    background: var(--paper);
-    /* paper texture: a faint dotted grid over a top-to-bottom cream fade */
-    background-image:
-        radial-gradient(var(--dots) 1px, transparent 1.2px),
-        linear-gradient(180deg, var(--paper) 0%, var(--paper-2) 100%);
-    background-size: 22px 22px, 100% 100%;
+    font: 14px/1.55 var(--font);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
 }
-a { color: var(--ink); transition: color 0.2s ease; }
-a:hover { color: var(--neon); }
+a { color: inherit; }
 button { font: inherit; color: inherit; cursor: pointer; }
-button:disabled { cursor: not-allowed; opacity: 0.45; }
-code, kbd, pre { font-family: var(--font-mono); }
-::selection { background: var(--neon); color: #fff; }
-:focus-visible { outline: var(--b) solid var(--neon); outline-offset: 3px; }
+button:disabled { cursor: not-allowed; opacity: 0.5; }
+code, kbd, pre { font-family: var(--mono); }
+:focus-visible { outline: 2px solid var(--cool); outline-offset: 2px; }
 [hidden] { display: none !important; }
-.display { font-family: var(--font-display); font-weight: 400; letter-spacing: 0.01em; line-height: 1; }
+::selection { background: var(--cool-soft); }
 
-/* ---- wordmark: four inked blocks + name ---- */
-.logo { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); }
-.logo:hover { color: var(--ink); }
-.logo-glyph { position: relative; width: 22px; height: 22px; flex: none; }
-.logo-glyph i { position: absolute; width: 11px; height: 11px; border: 2px solid var(--ink); border-radius: 3px; }
+/* logo */
+.logo { display: inline-flex; align-items: center; gap: 9px; text-decoration: none; font-weight: 600; letter-spacing: -0.02em; font-size: 16px; }
+.logo-glyph { position: relative; width: 20px; height: 20px; }
+.logo-glyph i { position: absolute; width: 9px; height: 9px; border-radius: 2.5px; }
 .logo-glyph i:nth-child(1) { left: 0; top: 0; background: var(--t-int); }
-.logo-glyph i:nth-child(2) { right: 0; top: 0; background: var(--hi); }
-.logo-glyph i:nth-child(3) { left: 0; bottom: 0; background: var(--paper); }
-.logo-glyph i:nth-child(4) { right: 0; bottom: 0; background: var(--neon); transform: translate(2px, 2px); }
-.logo b { font-family: var(--font-display); font-weight: 400; font-size: 1.1rem; letter-spacing: 0.02em; }
-.logo span { color: var(--text-muted); }
+.logo-glyph i:nth-child(2) { right: 0; top: 0; background: var(--t-str); }
+.logo-glyph i:nth-child(3) { left: 0; bottom: 0; background: var(--t-float); }
+.logo-glyph i:nth-child(4) { right: 0; bottom: 0; background: var(--accent); transform: translate(2px, 2px); box-shadow: -2px -2px 0 var(--bg); }
+.logo b { font-weight: 600; }
+.logo span { color: var(--muted); font-weight: 500; }
 
-/* ---- buttons: mono, lowercase, ink pills with hard shadows ----
-   .btn            ghost pill: paper fill, ink stroke (vaibhav .btnGhost)
-   .btn.primary    ink pill that turns neon on hover (vaibhav .btnInk)
-   .btn.ghost      no chrome until hovered
-   .btn.lg         the hero size, with the full 6px shadow */
+/* buttons */
 .btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
-    height: 34px;
-    padding: 0 1rem;
-    font-family: var(--font-mono);
-    font-weight: 700;
-    font-size: 0.78rem;
-    text-transform: lowercase;
-    white-space: nowrap;
+    gap: 7px;
+    height: 32px;
+    padding: 0 13px;
+    border-radius: 8px;
+    border: 1px solid var(--line-2);
+    background: var(--surface-2);
+    font-size: 13px;
+    font-weight: 500;
     text-decoration: none;
-    color: var(--ink);
-    background: var(--paper);
-    border: var(--b) solid var(--ink);
-    border-radius: 999px;
-    box-shadow: var(--shadow-sm);
-    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s, color 0.15s;
+    white-space: nowrap;
+    transition: background 0.15s, border-color 0.15s, transform 0.05s;
 }
-.btn:hover:not(:disabled) { color: var(--paper); background: var(--ink); transform: translate(-2px, -2px); box-shadow: var(--shadow-neon); }
-.btn:active:not(:disabled) { transform: translate(1px, 1px); box-shadow: 1px 1px 0 0 var(--ink); }
-.btn.primary { color: var(--paper); background: var(--ink); }
-.btn.primary:hover:not(:disabled) { color: #fff; background: var(--neon); box-shadow: 5px 5px 0 0 var(--ink); }
-.btn.ghost { background: transparent; border-color: transparent; box-shadow: none; }
-.btn.ghost:hover:not(:disabled) { color: var(--ink); background: var(--paper-2); border-color: var(--ink); box-shadow: var(--shadow-sm); transform: translate(-1px, -1px); }
-.btn.lg { height: auto; padding: 0.9rem 1.5rem; font-size: 0.9rem; gap: 0.6rem; box-shadow: var(--shadow); }
-.btn.lg:hover:not(:disabled) { transform: translate(-3px, -3px); box-shadow: var(--shadow-lift); }
-.btn.lg:not(.primary):hover:not(:disabled) { box-shadow: 9px 9px 0 0 var(--neon); }
-.btn kbd { font-size: 0.68rem; opacity: 0.65; }
-
+.btn:hover:not(:disabled) { background: var(--surface-3); border-color: var(--muted); }
+.btn:active:not(:disabled) { transform: translateY(1px); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.btn.primary:hover:not(:disabled) { background: var(--accent); filter: brightness(1.08); border-color: var(--accent); }
+.btn.ghost { background: transparent; border-color: transparent; color: var(--text-2); }
+.btn.ghost:hover:not(:disabled) { background: var(--surface-3); color: var(--text); border-color: transparent; }
+.btn.lg { height: 42px; padding: 0 18px; font-size: 14px; border-radius: 10px; }
+.btn kbd { font-size: 10.5px; opacity: 0.65; }
 .icon-btn {
-    width: 34px;
-    height: 34px;
+    width: 32px;
+    height: 32px;
     display: inline-grid;
     place-items: center;
-    border-radius: 10px;
-    border: var(--b) solid transparent;
+    border-radius: 8px;
+    border: 1px solid transparent;
     background: transparent;
-    color: var(--ink);
-    transition: background 0.15s, color 0.15s, transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+    color: var(--text-2);
 }
-.icon-btn:hover:not(:disabled) { color: var(--paper); background: var(--ink); border-color: var(--ink); transform: translate(-1px, -1px); box-shadow: 2px 2px 0 0 var(--neon); }
-.icon-btn.on { color: var(--on-colour); background: var(--hi); border-color: var(--ink); }
+.icon-btn:hover { background: var(--surface-3); color: var(--text); }
 .icon-btn svg { width: 16px; height: 16px; }
 
-/* ---- chips, tags, difficulty, tiers ---- */
-.chip { display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 0.7rem; font-family: var(--font-mono); font-weight: 700; font-size: 0.7rem; text-transform: lowercase; color: var(--ink); background: var(--paper); border: 2px solid var(--ink); border-radius: 999px; transition: transform 0.15s ease, box-shadow 0.15s ease; }
-.chip:is(a, button):hover { transform: translate(-2px, -2px); box-shadow: var(--shadow-sm); }
-.chip.active { color: var(--paper); background: var(--ink); box-shadow: 3px 3px 0 0 var(--neon); }
-.tag { display: inline-block; font-family: var(--font-mono); font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; padding: 0.2rem 0.5rem; color: var(--paper); background: var(--ink); border-radius: 4px; white-space: nowrap; }
-.tag.neon { color: #fff; background: var(--neon); }
-.diff { display: inline-block; font-family: var(--font-mono); font-size: 0.62rem; font-weight: 700; line-height: 1.2; text-transform: uppercase; letter-spacing: 0.1em; padding: 0.22rem 0.5rem; border: 2px solid var(--ink); border-radius: 4px; white-space: nowrap; color: var(--on-colour); }
-.diff.intro { color: var(--ink); background: var(--paper); }
-.diff.easy { background: #bfe8c9; }
-.diff.medium { background: var(--hi); }
-.diff.hard { color: #fff; background: var(--neon); }
-.tier { display: inline-flex; align-items: center; gap: 4px; font-family: var(--font-mono); font-size: 0.66rem; font-weight: 700; line-height: 1.2; text-transform: lowercase; padding: 0.25rem 0.6rem; border: 2px solid var(--ink); border-radius: 999px; white-space: nowrap; color: var(--on-colour); }
-.tier.optimal { background: var(--hi); box-shadow: 2px 2px 0 0 var(--ink); }
-.tier.time { background: #cfdcff; }
-.tier.space { background: #c8f3ec; }
-.tier.alt { color: var(--ink); background: var(--paper); }
-.tier.brute { color: #fff; background: var(--neon); }
+/* chips & badges */
+.chip { display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 8px; border-radius: 999px; font-size: 11.5px; color: var(--text-2); background: var(--surface-3); border: 1px solid var(--line); }
+.diff { font: 600 10.5px/1 var(--mono); letter-spacing: 0.04em; text-transform: uppercase; padding: 4px 7px; border-radius: 5px; }
+.diff.intro { color: var(--cool); background: var(--cool-soft); }
+.diff.easy { color: var(--ok); background: var(--ok-soft); }
+.diff.medium { color: var(--accent); background: var(--accent-soft); }
+.diff.hard { color: var(--bad); background: var(--bad-soft); }
+.tier { display: inline-flex; align-items: center; gap: 5px; font: 600 11px/1 var(--mono); padding: 5px 8px; border-radius: 6px; letter-spacing: 0.02em; }
+.tier.optimal { color: var(--accent-ink); background: var(--accent); }
+.tier.time { color: var(--accent); background: var(--accent-soft); }
+.tier.space { color: var(--teal); background: rgba(63, 193, 173, 0.13); }
+.tier.alt { color: var(--text-2); background: var(--surface-3); }
+.tier.brute { color: var(--bad); background: var(--bad-soft); }
 
-/* ---- comic panel ----
-   An inked card with a hard shadow. On hover it lifts, the shadow turns
-   neon and four L-shaped corner brackets appear (vaibhav.co.uk Panel). The
-   brackets are drawn by ::after, so no extra markup is needed; add
-   .bracketed to show them all the time, or .still to turn off the lift. */
-.ink-panel {
-    position: relative;
-    background: var(--paper);
-    border: var(--b) solid var(--ink);
-    border-radius: var(--r);
-    box-shadow: var(--shadow);
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
-}
-.ink-panel::after {
-    --l: 18px;
-    content: '';
-    position: absolute;
-    inset: calc(-8px - var(--b));
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.25s ease;
-    background:
-        linear-gradient(var(--neon) 0 0) left top / var(--l) var(--b),
-        linear-gradient(var(--neon) 0 0) left top / var(--b) var(--l),
-        linear-gradient(var(--neon) 0 0) right top / var(--l) var(--b),
-        linear-gradient(var(--neon) 0 0) right top / var(--b) var(--l),
-        linear-gradient(var(--neon) 0 0) left bottom / var(--l) var(--b),
-        linear-gradient(var(--neon) 0 0) left bottom / var(--b) var(--l),
-        linear-gradient(var(--neon) 0 0) right bottom / var(--l) var(--b),
-        linear-gradient(var(--neon) 0 0) right bottom / var(--b) var(--l);
-    background-repeat: no-repeat;
-}
-.ink-panel:not(.still):hover { transform: translate(-4px, -4px); box-shadow: 10px 10px 0 0 var(--neon), 10px 10px 0 var(--b) var(--ink); }
-.ink-panel:not(.still):hover::after, .ink-panel.bracketed::after { opacity: 1; }
-.ink-panel.flat { box-shadow: var(--shadow-sm); }
-
-/* section heading: a small neon number over a Bungee title */
-.section-num { display: inline-block; font-family: var(--font-mono); font-weight: 700; font-size: 0.8rem; color: var(--neon); letter-spacing: 0.15em; text-transform: lowercase; margin-bottom: 0.4rem; }
-.highlight { background: linear-gradient(transparent 58%, var(--hi) 58%, var(--hi) 92%, transparent 92%); padding: 0 0.1em; }
-
-/* ---- syntax highlight ---- */
-.tk-kw { color: var(--tk-kw); font-weight: 700; }
+/* syntax highlight */
+.tk-kw { color: var(--tk-kw); }
 .tk-str { color: var(--tk-str); }
 .tk-num { color: var(--tk-num); }
 .tk-com { color: var(--tk-com); font-style: italic; }
-.tk-def { color: var(--tk-def); font-weight: 700; }
+.tk-def { color: var(--tk-def); }
 .tk-bi { color: var(--tk-bi); }
 .tk-op { color: var(--tk-op); }
 
-/* ---- toast: a sticker pill ---- */
+/* toast */
 .toast {
     position: fixed;
     left: 50%;
     bottom: 28px;
     transform: translateX(-50%);
-    z-index: var(--z-overlay);
+    z-index: 100;
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 0.7rem 1.1rem;
-    font-family: var(--font-mono);
-    font-weight: 700;
-    font-size: 0.8rem;
-    text-transform: lowercase;
-    color: var(--ink);
-    background: var(--paper);
-    border: var(--b) solid var(--ink);
-    border-radius: 999px;
-    box-shadow: var(--shadow-sm);
-    animation: toastIn 0.25s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+    padding: 11px 16px;
+    border-radius: 12px;
+    background: var(--surface-3);
+    border: 1px solid var(--line-2);
+    box-shadow: var(--shadow-lg);
+    font-weight: 500;
+    animation: toastIn 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.2);
 }
-.toast::before { content: ''; width: 9px; height: 9px; border-radius: 50%; border: 2px solid var(--ink); background: var(--paper); }
-.toast.success::before { background: var(--t-bool); }
-.toast.warn::before { background: var(--hi); }
-.toast.error::before { background: var(--neon); }
-@keyframes toastIn { from { opacity: 0; transform: translate(-50%, 12px); } }
+.toast::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--cool); }
+.toast.success::before { background: var(--ok); }
+.toast.warn::before { background: var(--accent); }
+.toast.error::before { background: var(--bad); }
+@keyframes toastIn { from { opacity: 0; transform: translate(-50%, 12px) scale(0.98); } }
 
 @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }

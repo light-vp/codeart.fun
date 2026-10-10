@@ -1,6 +1,7 @@
 import { CodeEditor, highlightPython } from './editor.js';
 import { EXAMPLES } from './examples.js';
 import { decodeStep, layoutStep, TokenBook } from './model.js';
+import { bindLookButtons, sceneTheme } from './look.js';
 import { PanelLayout } from './panels.js';
 import { loadPython, test as runTests, trace as runTrace } from './runtime.js';
 import { account } from './sync.js';
@@ -82,7 +83,7 @@ async function initScene() {
     if (document.fonts?.ready) await Promise.race([document.fonts.ready, new Promise((r) => setTimeout(r, 1500))]);
     const { BlockScene } = await import('./scene.js');
     state.scene = new BlockScene($('viewport'));
-    state.scene.setTheme(document.documentElement.dataset.theme);
+    state.scene.setTheme(sceneTheme());
     state.scene.onUserCamera = () => { $('recenterBtn').hidden = false; };
     const measure = () => {
       const stage = document.querySelector('.stage').getBoundingClientRect();
@@ -698,12 +699,7 @@ $('solutionsPane').onclick = (e) => {
 document.querySelectorAll('.seg-btn').forEach((t) => { t.onclick = () => setMode(t.dataset.mode); });
 document.querySelectorAll('.tab').forEach((t) => { t.onclick = () => setTab(t.dataset.tab); });
 document.querySelectorAll('.ctab').forEach((t) => { t.onclick = () => showConsole(t.dataset.pane); });
-$('themeBtn').onclick = () => {
-  const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
-  document.documentElement.dataset.theme = next;
-  try { localStorage.setItem('codeart-theme', next); } catch { /* ignore */ }
-  state.scene?.setTheme(next);
-};
+bindLookButtons({ themeBtn: $('themeBtn'), styleBtn: $('styleBtn'), onChange: () => state.scene?.setTheme(sceneTheme()) });
 document.addEventListener('keydown', (e) => {
   if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); $('drawer').hidden ? openDrawer() : closeDrawer(); return; }
   if (e.key === 'Escape' && !$('drawer').hidden) { closeDrawer(); return; }
