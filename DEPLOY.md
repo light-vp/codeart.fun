@@ -12,12 +12,30 @@ no GitHub Action is needed.
    choose `api/schema.sql` → Go. This creates five tables: `users`, `progress`,
    `drafts`, `submissions` and `auth_attempts`. Re-importing is safe.
 
-## 2. Configure the API
+## 2. Configure the API (after the first deploy in step 3)
 
-1. Copy `api/config.sample.php` to `api/config.php`.
-2. Fill in the database name, user and password from step 1. Keep
-   `'secure_cookies' => true`.
-3. Never commit `config.php` (it is listed in `.gitignore`).
+The API reads the database password from a settings file that exists only on
+the server. Keep it **outside the website folder**, so it has no web address:
+
+```
+domains/codeart.fun/
+├── codeart-config.php   ← put it here: no URL can reach this folder
+└── public_html/         ← the website (deployed from this repo)
+```
+
+1. hPanel → the codeart.fun website → **File Manager**. Open `public_html`, then
+   go **up one level** to the folder that contains it.
+2. Create `codeart-config.php` there and paste in the contents of
+   `api/config.sample.php`.
+3. Fill in the database name, user and password from step 1. Keep
+   `'secure_cookies' => true`. `<?php` must be the very first thing in the file.
+4. Optional: set its permissions to `600`, or `640` if the API then says it is
+   not configured.
+
+The API looks for `codeart-config.php` above the web root first, then falls back
+to `public_html/api/config.php`, so either location works. Use the first unless
+your host blocks access above the web root. Neither file is ever committed;
+both are git-ignored.
 
 PHP **8.1 or newer** is required (hPanel → Advanced → PHP Configuration). Check
 that the `pdo_mysql` and `mbstring` extensions are enabled; they are by default.
@@ -31,8 +49,8 @@ that the `pdo_mysql` and `mbstring` extensions are enabled; they are by default.
    keys**, add it **read-only**. Use a per-repo key, never an account SSH key.
 4. Turn on **Auto-deployment**, copy its webhook URL, and add it in GitHub →
    **Settings → Webhooks** (content type `application/json`, push events).
-5. Put `api/config.php` on the server once, with File Manager (step 2 above).
-   It is git-ignored, so deploys never overwrite or delete it.
+5. Then create the settings file (step 2). It sits outside `public_html` and
+   isn't in git, so deploys never touch it.
 
 Every push to `main` is then live within seconds. Dev-only files (`tools/`,
 `screenshots/`, Markdown) are copied too, but the root `.htaccess` blocks
@@ -47,8 +65,10 @@ redirects every request to HTTPS.
 - `https://codeart.fun/learn` (or `/app.html`) opens the workspace. A
   **Sign in** button in the top bar means the API answered. If the button
   is missing, open `https://codeart.fun/api/me.php`: it should return
-  `{"user":null}`. A message saying the server isn't configured means
-  `config.php` is missing or in the wrong folder.
+  `{"user":null}`. "The server is not configured yet" means the settings file
+  isn't where the API looks: check it is named `codeart-config.php` and sits in
+  the folder *containing* `public_html`, not inside it. "Database unavailable"
+  means it was found but a database name, user or password in it is wrong.
 - Create an account, solve a level, then open the site in a private
   window and sign in. Your progress should be there.
 

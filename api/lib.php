@@ -23,8 +23,31 @@ function fail(string $message, int $status = 400): never
     respond(['error' => $message], $status);
 }
 
-$configFile = getenv('CODEART_CONFIG') ?: __DIR__ . '/config.php';
-if (!is_file($configFile)) {
+// Where the database settings live, most private first:
+//   1. CODEART_CONFIG (an explicit path; the test script uses this)
+//   2. codeart-config.php in the folder ABOVE the web root, e.g.
+//      domains/codeart.fun/codeart-config.php next to public_html/. Nothing
+//      there has a URL, so it can never be served, even if .htaccess breaks.
+//   3. api/config.php inside the web root (fallback; blocked by api/.htaccess)
+// The @ keeps an open_basedir warning from leaking into the JSON response if
+// the host forbids looking above the web root; we just fall through.
+function config_path(): ?string
+{
+    $candidates = array_filter([
+        getenv('CODEART_CONFIG') ?: null,
+        dirname(__DIR__, 2) . '/codeart-config.php',
+        __DIR__ . '/config.php',
+    ]);
+    foreach ($candidates as $path) {
+        if (@is_file($path) && @is_readable($path)) {
+            return $path;
+        }
+    }
+    return null;
+}
+
+$configFile = config_path();
+if ($configFile === null) {
     fail('The server is not configured yet.', 503);
 }
 $CONFIG = require $configFile;
