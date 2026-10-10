@@ -57,5 +57,31 @@ for i in 1 2 3 4 5 6 7 8; do req POST auth.php '{"action":"login","email":"ada@e
 expect "rate limit after repeated failures" 429 "$(req POST auth.php '{"action":"login","email":"ada@example.com","password":"correct horse"}')"
 expect "lib.php is not an endpoint"   404 "$(req GET lib.php)"
 
+# --- settings-file discovery, against a copy laid out like Hostinger:
+#     $tmp/site/codeart-config.php  +  $tmp/site/public_html/<this repo>
+kill $server 2>/dev/null || true
+mkdir -p "$tmp/site/public_html"
+(cd "$root" && tar --exclude=.git -cf - .) | (cd "$tmp/site/public_html" && tar -xf -)
+rm -f "$tmp/site/public_html/api/config.php" "$tmp/site/codeart-config.php"
+php -S 127.0.0.1:8132 -t "$tmp/site/public_html" >"$tmp/server2.log" 2>&1 &
+server=$!
+sleep 1
+me() { curl -s -o "$tmp/body" -w '%{http_code}' "http://127.0.0.1:8132/api/me.php"; }
+# a sign-in attempt always queries the database, so it shows WHICH file was used
+login() { curl -s -o "$tmp/body" -w '%{http_code}' -X POST -H 'Content-Type: application/json' -H 'X-CodeArt: 1' --data '{"action":"login","email":"nobody@example.com","password":"whatever1"}' "http://127.0.0.1:8132/api/auth.php"; }
+php -r '$p = new PDO("sqlite:" . $argv[1]); $p->exec(file_get_contents($argv[2]));' "$tmp/db2.sqlite" "$here/schema-sqlite.sql"
+good="<?php return ['db' => ['dsn' => 'sqlite:$tmp/db2.sqlite'], 'secure_cookies' => false];"
+bad="<?php return ['db' => ['dsn' => 'sqlite:/nonexistent/dir/db.sqlite'], 'secure_cookies' => false];"
+
+expect "no settings file → not configured"          503 "$(me)" 'not configured'
+echo "$good" > "$tmp/site/codeart-config.php"
+expect "settings above the web root are found"      200 "$(me)" '"user":null'
+echo "$bad" > "$tmp/site/public_html/api/config.php"
+expect "above-web-root file wins over api/config.php" 401 "$(login)" 'incorrect'
+rm "$tmp/site/codeart-config.php"
+expect "falls back to api/config.php"                503 "$(login)" 'Database unavailable'
+echo "$good" > "$tmp/site/public_html/api/config.php"
+expect "api/config.php alone works"                  200 "$(me)" '"user":null'
+
 echo "$pass passed, $failn failed"
 [ "$failn" = 0 ] || { echo "--- server log"; cat "$tmp/server.log"; exit 1; }
