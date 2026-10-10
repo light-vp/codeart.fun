@@ -9,27 +9,31 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 
+// Colours mirror the tokens in css/base.css (vaibhav.co.uk's palette): cream
+// paper, ink, a neon accent and a highlighter cursor. "dark" is the night
+// rebinding, where paper goes near-black and ink turns cream.
 export const THEMES = {
   dark: {
-    bg: 0x0b0c10, floor: 0x0f1015, dot: 'rgba(255,255,255,0.07)', zone: 'rgba(255,255,255,0.10)',
-    frame: 0x1a1d25, frameActive: 0x232634, heap: 0x15171e, cell: 0x0c0d12, plate: 0x262a35,
-    text: '#e8e9ec', muted: '#7f8592', accent: 0xffb224, arrow: 0x8b9cff, cursor: 0xffb224, ref: 0x2b2f3a,
-    hemiSky: 0xb9c2ff, hemiGround: 0x15161c, hemi: 1.1, sun: 2.1,
+    bg: 0x131311, floor: 0x161613, dot: 'rgba(243,236,221,0.08)', zone: 'rgba(243,236,221,0.16)',
+    frame: 0x22211d, frameActive: 0x2c2a24, heap: 0x1b1a17, cell: 0x0b0b0a, plate: 0x34322b,
+    text: '#f3ecdd', muted: '#9b937f', accent: 0xff2e63, arrow: 0xf3ecdd, cursor: 0xffd84d, ref: 0x3a372f,
+    hemiSky: 0xfff3dd, hemiGround: 0x161613, hemi: 1.1, sun: 2.1,
   },
   light: {
-    bg: 0xf3f1ec, floor: 0xeeebe4, dot: 'rgba(40,30,20,0.10)', zone: 'rgba(40,30,20,0.12)',
-    frame: 0xffffff, frameActive: 0xfffaf0, heap: 0xfbfaf7, cell: 0xe6e2d9, plate: 0xf1eee8,
-    text: '#17181c', muted: '#8a8478', accent: 0xf59e0b, arrow: 0x5b6cff, cursor: 0xf59e0b, ref: 0x3b4050,
-    hemiSky: 0xffffff, hemiGround: 0xcfc8bb, hemi: 1.5, sun: 2.0,
+    bg: 0xf3ecdd, floor: 0xe2d7bf, dot: 'rgba(17,17,17,0.10)', zone: 'rgba(17,17,17,0.16)',
+    frame: 0xfbf6ea, frameActive: 0xfff6d6, heap: 0xf7f1e3, cell: 0xe2d6bc, plate: 0xebe2cd,
+    text: '#111111', muted: '#6a6358', accent: 0xff2e63, arrow: 0x111111, cursor: 0xffd84d, ref: 0xd8ccb2,
+    hemiSky: 0xffffff, hemiGround: 0xd8ccb2, hemi: 1.5, sun: 2.0,
   },
 };
 
+// the --t-* tokens in css/base.css; keep the two in step
 export const TYPE_COLORS = {
-  int: 0x7c8cff, float: 0x3fc1ad, complex: 0x3fc1ad, str: 0xf2a65a,
-  True: 0x7dd36a, False: 0xf07a7a, None: 0x6b7080,
-  function: 0xb48cff, class: 0xb48cff, builtin: 0xb48cff,
+  int: 0x4f7cff, float: 0x22d3ee, complex: 0x22d3ee, str: 0xffd84d,
+  True: 0x3fae5a, False: 0xff2e63, None: 0xcfc6b2,
+  function: 0xc084fc, class: 0xc084fc, builtin: 0xc084fc,
 };
-const MARKER_COLORS = [0xff6b8b, 0x4cc9f0, 0xc77dff, 0x52d6a4, 0xff9f43, 0xf15bb5, 0x9bb0c9];
+const MARKER_COLORS = [0xff2e63, 0x22d3ee, 0xc084fc, 0x3fae5a, 0xffd84d, 0x4f7cff, 0xff8a3d];
 
 // heights above the table (board z)
 const H = { tray: 0.22, cell: 0.06, plate: 0.08, cube: 0.84 };
@@ -38,10 +42,12 @@ const Z = { tray: H.tray / 2, cell: H.tray + H.cell / 2, plate: H.tray + H.plate
 const easeInOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 const easeOutBack = (t) => { const c1 = 1.4, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); };
 const hex = (n) => '#' + n.toString(16).padStart(6, '0');
+// ink or white, whichever reads on a fill (yellow and cyan blocks need ink)
+const textOn = (n) => ((((n >> 16) & 255) * 299 + ((n >> 8) & 255) * 587 + (n & 255) * 114) / 1000 > 150 ? '#111111' : '#ffffff');
 function hashName(s) { let h = 7; for (const c of s) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h; }
 
-const FONT_SANS = '"Geist", "Inter", system-ui, sans-serif';
-const FONT_MONO = '"Geist Mono", "JetBrains Mono", ui-monospace, monospace';
+const FONT_SANS = '"Space Grotesk", system-ui, sans-serif';
+const FONT_MONO = '"JetBrains Mono", ui-monospace, monospace';
 
 // Crisp text on a transparent (or coloured, rounded) canvas.
 function textTexture(text, { color = '#fff', bg = null, aspect = 1, weight = 600, align = 'center', font = FONT_MONO, scale = 0.56, radius = 0 }) {
@@ -250,7 +256,7 @@ export class BlockScene {
       dot.position.z = size / 2 + 0.006;
       g.add(dot);
     } else {
-      const face = decal(v.text, v.w - 0.14, size * 0.8, { color: '#ffffff', weight: 600, scale: v.text.length > 6 ? 0.5 : 0.6 });
+      const face = decal(v.text, v.w - 0.14, size * 0.8, { color: textOn(color), weight: 700, scale: v.text.length > 6 ? 0.5 : 0.6 });
       face.position.z = size / 2 + 0.006;
       g.add(face);
     }
@@ -263,7 +269,7 @@ export class BlockScene {
     const plate = roundedBox(s.w, 0.74, H.plate, 0.04, new THREE.MeshStandardMaterial({ color: s.ret ? this.theme.accent : this.theme.plate, roughness: 0.9 }));
     plate.castShadow = false;
     g.add(plate);
-    const lab = decal(s.label, s.w - 0.12, 0.66, { color: s.ret ? '#17181c' : this.theme.text, align: 'left', weight: s.field ? 500 : 600, scale: 0.58 });
+    const lab = decal(s.label, s.w - 0.12, 0.66, { color: s.ret ? textOn(this.theme.accent) : this.theme.text, align: 'left', weight: s.field ? 500 : 600, scale: 0.58 });
     lab.position.z = H.plate / 2 + 0.004;
     g.add(lab);
     return g;
@@ -311,7 +317,7 @@ export class BlockScene {
     const color = MARKER_COLORS[hashName(m.name) % MARKER_COLORS.length];
     const lw = Math.max(0.9, 0.22 * m.label.length + 0.4);
     const chip = roundedBox(lw, 0.44, 0.08, 0.06, new THREE.MeshStandardMaterial({ color, roughness: 0.6, emissive: color, emissiveIntensity: m.active ? 0.25 : 0 }));
-    const txt = decal(m.label, lw - 0.08, 0.38, { color: '#ffffff', weight: 700, scale: 0.62 });
+    const txt = decal(m.label, lw - 0.08, 0.38, { color: textOn(color), weight: 700, scale: 0.62 });
     txt.position.z = 0.045;
     const head = new THREE.Mesh(new THREE.ConeGeometry(0.13, 0.3, 3), new THREE.MeshStandardMaterial({ color, roughness: 0.6 }));
     head.castShadow = true;

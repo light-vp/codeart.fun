@@ -26,6 +26,7 @@ DirectoryIndex index.html
     AddType text/plain .py
     AddType application/json .json
     AddType image/svg+xml .svg
+    AddType font/woff2 .woff2
 </IfModule>
 
 <IfModule mod_headers.c>
@@ -42,4 +43,6 @@ DirectoryIndex index.html
     ExpiresByType text/javascript "access plus 1 hour"
     ExpiresByType text/plain "access plus 1 hour"
     ExpiresByType image/svg+xml "access plus 1 week"
+    # font filenames carry a content hash, so a changed font is a new URL
+    ExpiresByType font/woff2 "access plus 1 year"
 </IfModule>

@@ -10,7 +10,7 @@ const progress = (() => { try { return JSON.parse(localStorage.getItem('codeart-
 $('statLevels').textContent = LEVELS.length;
 $('statSolutions').textContent = LEVELS.reduce((n, l) => n + l.solutions.length, 0);
 $('trackGrid').innerHTML = TRACKS.map((t, i) => `
-  <a class="track-card reveal" href="app.html#${t.levels[0].id}">
+  <a class="track-card ink-panel reveal" href="app.html#${t.levels[0].id}">
     <span class="track-num">${String(i + 1).padStart(2, '0')}</span>
     <span class="arrow" aria-hidden="true">↗</span>
     <h3>${esc(t.title)}</h3>
