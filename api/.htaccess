@@ -1,0 +1,12 @@
+Options -Indexes
+
+# Only the endpoint scripts are public; the bootstrap, config and schema are not.
+<FilesMatch "^(lib\.php|config\.php|config\.sample\.php|.*\.sql)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>

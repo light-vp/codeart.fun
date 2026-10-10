@@ -1,21 +1,23 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CodeArt Blocks</title>
-    <meta name="description" content="Write Python and watch it run as 3D blocks: variables, lists, dicts, loops and the call stack, step by step.">
+    <title>codeart — see your code move</title>
+    <meta name="description" content="Learn Python by watching it run. Every line you write plays out as 3D blocks: variables, lists, dicts, loops and the call stack.">
+    <meta property="og:title" content="codeart — see your code move">
+    <meta property="og:description" content="Learn Python by watching it run, line by line, as 3D blocks.">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/visualizer.css">
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/landing.css">
     <script>
-        // apply the saved site theme before first paint
         (function () {
             var t = null;
             try { t = localStorage.getItem('codeart-theme'); } catch (e) {}
-            if (!t) t = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-            document.documentElement.setAttribute('data-theme', t);
+            document.documentElement.setAttribute('data-theme', t === 'light' ? 'light' : 'dark');
         })();
     </script>
     <script type="importmap">
@@ -28,111 +30,117 @@
     </script>
 </head>
 <body>
-    <header class="topbar">
-        <a class="brand" href="../index.html" title="Back to CodeArt.fun">
-            <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
-            <span class="brand-name">CodeArt<span>Blocks</span></span>
-        </a>
-        <nav class="mode-tabs" role="tablist">
-            <button class="mode-tab active" data-mode="levels" role="tab" aria-selected="true">Levels</button>
-            <button class="mode-tab" data-mode="playground" role="tab" aria-selected="false">Playground</button>
+    <header class="nav">
+        <a class="logo" href="./"><span class="logo-glyph" aria-hidden="true"><i></i><i></i><i></i><i></i></span><b>codeart</b></a>
+        <nav class="nav-links">
+            <a href="#how">How it works</a>
+            <a href="#solutions">Solutions</a>
+            <a href="#tracks">Tracks</a>
+            <a href="app.html#playground">Playground</a>
         </nav>
-        <div class="topbar-right">
-            <span class="py-status" id="pyStatus"><span class="dot"></span><span class="txt">Starting Python…</span></span>
-            <span class="progress-pill" id="progressPill" title="Levels completed">0 / 0</span>
-            <button class="icon-btn" id="themeBtn" title="Toggle theme" aria-label="Toggle theme">◐</button>
+        <div class="nav-right">
+            <button class="icon-btn" id="themeBtn" aria-label="Toggle theme" title="Toggle theme"><svg viewBox="0 0 16 16"><path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13zm0 1.5v10a5 5 0 0 1 0-10z" fill="currentColor"/></svg></button>
+            <a class="btn primary" href="app.html">Start learning</a>
         </div>
     </header>
 
-    <div class="layout">
-        <!-- Sidebar: level browser or playground examples -->
-        <aside class="sidebar" id="sidebar">
-            <div class="sidebar-section" id="levelBrowser">
-                <input class="search" id="levelSearch" type="search" placeholder="Search levels or concepts…" aria-label="Search levels">
-                <div id="trackList"></div>
-            </div>
-            <div class="sidebar-section" id="playgroundBrowser" hidden>
-                <h3 class="side-title">Examples</h3>
-                <p class="side-note">Pick one to load it, or write anything you like. Every line you run becomes an animation.</p>
-                <div id="exampleList"></div>
-            </div>
-        </aside>
-
-        <!-- Problem + editor -->
-        <section class="workbench">
-            <div class="brief" id="brief"></div>
-            <div class="editor-toolbar">
-                <button class="btn primary" id="runBtn" title="Ctrl/⌘ + Enter">▶ Visualize</button>
-                <button class="btn" id="checkBtn">✓ Check</button>
-                <button class="btn ghost" id="demoBtn" title="Load the reference solution and animate it">Watch solution</button>
-                <button class="btn ghost" id="resetBtn" title="Restore the starter code">Reset</button>
-            </div>
-            <div id="editor"></div>
-            <div class="console">
-                <div class="console-tabs">
-                    <button class="console-tab active" data-pane="out">Output</button>
-                    <button class="console-tab" data-pane="tests">Tests</button>
+    <main>
+        <section class="hero">
+            <div class="hero-copy">
+                <p class="eyebrow"><span class="dot"></span>Python, visualised</p>
+                <h1>See your code <em>move.</em></h1>
+                <p class="lede">Write Python and watch every line execute on a table of blocks — variables, lists, dicts, pointers and the call stack, one step at a time. No more guessing what <code>print</code> left out.</p>
+                <div class="hero-cta">
+                    <a class="btn primary lg" href="app.html">Start level one <span aria-hidden="true">→</span></a>
+                    <a class="btn lg" href="app.html#playground">Open the playground</a>
                 </div>
-                <pre class="console-pane" id="outPane"></pre>
-                <div class="console-pane" id="testPane" hidden></div>
+                <dl class="hero-stats">
+                    <div><dt id="statLevels">36</dt><dd>levels</dd></div>
+                    <div><dt id="statSolutions">82</dt><dd>ranked solutions</dd></div>
+                    <div><dt>0</dt><dd>installs — runs in your browser</dd></div>
+                </dl>
+            </div>
+
+            <figure class="hero-demo" aria-label="Animated demo of bubble sort running">
+                <div class="demo-stage" id="heroStage"></div>
+                <div class="demo-code glass">
+                    <div class="demo-code-head"><i></i><i></i><i></i><span>bubble_sort.py</span></div>
+                    <pre id="heroCode"></pre>
+                </div>
+                <div class="demo-decode glass"><span class="stage-label">Decode</span><div id="heroDecode">—</div></div>
+            </figure>
+        </section>
+
+        <section class="how" id="how">
+            <div class="section-head">
+                <p class="eyebrow">How it reads</p>
+                <h2>A tiny CPU for every line.</h2>
+                <p>Real processors fetch an instruction, decode it, then execute it. codeart does the same for your Python, so cause and effect are never more than one step apart.</p>
+            </div>
+            <ol class="cycle">
+                <li>
+                    <span class="cycle-tag fetch">01 · Fetch</span>
+                    <h3>Find the line</h3>
+                    <p>The editor highlights exactly which line runs next — loops, branches and function calls included.</p>
+                </li>
+                <li>
+                    <span class="cycle-tag decode">02 · Decode</span>
+                    <h3>Say what it means</h3>
+                    <p>Plain-English operations: <code>APPEND 7 → end of nums</code>, <code>SWAP arr[0] ⇄ arr[1]</code>, <code>need in seen → True</code>.</p>
+                </li>
+                <li>
+                    <span class="cycle-tag exec">03 · Execute</span>
+                    <h3>Watch memory change</h3>
+                    <p>Blocks drop into lists, hop when swapped and fly into variables. Stack frames pile up and pop. Scrub backwards any time.</p>
+                </li>
+            </ol>
+        </section>
+
+        <section class="solutions" id="solutions">
+            <div class="section-head">
+                <p class="eyebrow">Every problem, ranked</p>
+                <h2>Brute force to optimal, side by side.</h2>
+                <p>Each level comes with several approaches, tagged by what they optimise for. Animate any of them and compare the work they do on the same input.</p>
+            </div>
+            <div class="compare">
+                <div class="compare-head"><span class="diff easy">Easy</span><b>Climbing Stairs</b><span class="muted">climb_stairs(5)</span></div>
+                <div class="compare-row">
+                    <span class="tier optimal">★ Optimal</span>
+                    <div class="compare-name"><b>Two rolling variables</b><span>time O(n) · space O(1)</span></div>
+                    <div class="compare-bar"><i style="--w:30%"></i></div><span class="compare-n">14 steps</span>
+                </div>
+                <div class="compare-row">
+                    <span class="tier time">Best time</span>
+                    <div class="compare-name"><b>Bottom-up table</b><span>time O(n) · space O(n)</span></div>
+                    <div class="compare-bar"><i style="--w:55%"></i></div><span class="compare-n">26 steps</span>
+                </div>
+                <div class="compare-row">
+                    <span class="tier brute">Brute force</span>
+                    <div class="compare-name"><b>Plain recursion</b><span>time O(2ⁿ) · space O(n)</span></div>
+                    <div class="compare-bar brute"><i style="--w:100%"></i></div><span class="compare-n">47 steps</span>
+                </div>
             </div>
         </section>
 
-        <!-- 3D stage -->
-        <section class="stage">
-            <div class="cpu" aria-live="polite">
-                <div class="cpu-cell" id="cpuFetch">
-                    <span class="cpu-tag">FETCH</span>
-                    <code class="cpu-body" id="fetchText">Press ▶ Visualize to run your program</code>
-                </div>
-                <div class="cpu-cell" id="cpuDecode">
-                    <span class="cpu-tag">DECODE</span>
-                    <div class="cpu-body" id="decodeText">—</div>
-                </div>
-                <div class="cpu-cell" id="cpuExec">
-                    <span class="cpu-tag">EXECUTE</span>
-                    <div class="cpu-body" id="execText">—</div>
-                </div>
+        <section class="tracks" id="tracks">
+            <div class="section-head">
+                <p class="eyebrow">The path</p>
+                <h2>From your first variable to dynamic programming.</h2>
             </div>
-            <div class="viewport" id="viewport">
-                <div class="viewport-overlay" id="viewportMsg">
-                    <div class="hero-blocks" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-                    <p>Your program's memory appears here as blocks.</p>
-                    <p class="muted">Left: the <b>call stack</b> (one frame per running function). Right: the <b>heap</b> (lists, dicts, strings and objects).</p>
-                </div>
-                <div class="legend">
-                    <span><i style="--c:#4a72e8"></i>int</span>
-                    <span><i style="--c:#23a597"></i>float</span>
-                    <span><i style="--c:#e8962e"></i>str</span>
-                    <span><i style="--c:#4caf6a"></i>bool</span>
-                    <span><i style="--c:#83818f"></i>None</span>
-                    <span><i style="--c:#2b2733"></i>reference</span>
-                </div>
-                <button class="icon-btn recenter" id="recenterBtn" title="Recenter camera" hidden>⌖ Recenter</button>
-            </div>
-            <div class="player">
-                <div class="player-buttons">
-                    <button class="icon-btn" id="firstBtn" title="First step" aria-label="First step">⏮</button>
-                    <button class="icon-btn" id="prevBtn" title="Step back (←)" aria-label="Step back">◀</button>
-                    <button class="icon-btn play" id="playBtn" title="Play / pause (space)" aria-label="Play">▶</button>
-                    <button class="icon-btn" id="nextBtn" title="Step forward (→)" aria-label="Step forward">▶|</button>
-                    <button class="icon-btn" id="lastBtn" title="Last step" aria-label="Last step">⏭</button>
-                </div>
-                <input type="range" id="scrubber" min="0" max="0" value="0" aria-label="Scrub through steps">
-                <span class="step-count" id="stepCount">0 / 0</span>
-                <select id="speedSel" aria-label="Playback speed">
-                    <option value="0.5">0.5×</option>
-                    <option value="1" selected>1×</option>
-                    <option value="2">2×</option>
-                    <option value="4">4×</option>
-                </select>
-            </div>
-            <div class="hud" id="hud"></div>
+            <div class="track-grid" id="trackGrid"></div>
         </section>
-    </div>
 
-    <div class="toast" id="toast" hidden></div>
+        <section class="cta">
+            <h2>Stop imagining memory.<br><em>Look at it.</em></h2>
+            <a class="btn primary lg" href="app.html">Start level one <span aria-hidden="true">→</span></a>
+        </section>
+    </main>
 
-    <script type="module" src="js/app.js"></script>
+    <footer class="foot">
+        <span class="logo"><span class="logo-glyph" aria-hidden="true"><i></i><i></i><i></i><i></i></span><b>codeart</b></span>
+        <span class="muted">Built by <a href="https://github.com/light-vp">Vaibhav Patel</a> · Python runs locally via Pyodide</span>
+    </footer>
+
+    <script type="module" src="js/landing.js"></script>
 </body>
 </html>

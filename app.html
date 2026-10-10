@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>codeart — Learn</title>
+    <meta name="description" content="Write Python and watch it run as 3D blocks: variables, lists, dicts, loops and the call stack, step by step.">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/app.css">
+    <script>
+        (function () {
+            var t = null;
+            try { t = localStorage.getItem('codeart-theme'); } catch (e) {}
+            document.documentElement.setAttribute('data-theme', t === 'light' ? 'light' : 'dark');
+        })();
+    </script>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+</head>
+<body>
+    <header class="bar">
+        <a class="logo" href="./" title="codeart home">
+            <span class="logo-glyph" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+            <b>codeart</b>
+        </a>
+        <nav class="seg" role="tablist" aria-label="Mode">
+            <button class="seg-btn active" data-mode="levels" role="tab" aria-selected="true">Learn</button>
+            <button class="seg-btn" data-mode="playground" role="tab" aria-selected="false">Playground</button>
+        </nav>
+        <button class="crumb" id="levelsBtn" aria-haspopup="dialog" aria-controls="drawer">
+            <span class="crumb-track" id="crumbTrack">Memory Basics</span>
+            <span class="crumb-sep">/</span>
+            <span class="crumb-title" id="crumbTitle">Swap Two Boxes</span>
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <kbd>⌘K</kbd>
+        </button>
+        <div class="bar-right">
+            <span class="py" id="pyStatus" title="Python runtime"><i></i><span>Loading Python</span></span>
+            <span class="ring" id="progressRing" title="Levels solved">
+                <svg viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="15" class="ring-bg"/><circle cx="18" cy="18" r="15" class="ring-fg" id="ringFg"/></svg>
+                <span id="progressText">0/36</span>
+            </span>
+            <button class="icon-btn" id="themeBtn" title="Toggle theme" aria-label="Toggle theme">
+                <svg viewBox="0 0 16 16"><path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13zm0 1.5v10a5 5 0 0 1 0-10z" fill="currentColor"/></svg>
+            </button>
+            <button class="btn" id="accountBtn" hidden>Sign in</button>
+        </div>
+    </header>
+
+    <main class="ws">
+        <section class="left" aria-label="Problem and editor">
+            <div class="panel">
+                <div class="tabs" role="tablist">
+                    <button class="tab active" data-tab="problem" role="tab">Problem</button>
+                    <button class="tab" data-tab="solutions" role="tab">Solutions <span class="tab-count" id="solCount"></span></button>
+                    <button class="tab" data-tab="history" role="tab">History</button>
+                </div>
+                <div class="tab-body" id="problemPane"></div>
+                <div class="tab-body" id="solutionsPane" hidden></div>
+                <div class="tab-body" id="historyPane" hidden></div>
+            </div>
+
+            <div class="editor-card">
+                <div class="editor-head">
+                    <span class="file"><i></i>main.py</span>
+                    <span class="spacer"></span>
+                    <button class="btn ghost" id="resetBtn" title="Restore the starter code">Reset</button>
+                    <button class="btn" id="runBtn" title="Run and animate (Ctrl/⌘ + Enter)">
+                        <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M4 2.5v11l9-5.5z" fill="currentColor"/></svg>Run
+                    </button>
+                    <button class="btn primary" id="checkBtn" title="Run the tests">Submit</button>
+                </div>
+                <div id="editor"></div>
+                <div class="console" id="console">
+                    <div class="console-head">
+                        <button class="ctab active" data-pane="out">Output</button>
+                        <button class="ctab" data-pane="tests">Tests <span id="testBadge"></span></button>
+                    </div>
+                    <pre class="console-pane" id="outPane"></pre>
+                    <div class="console-pane" id="testPane" hidden></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="stage" aria-label="Memory visualisation">
+            <div class="viewport" id="viewport"></div>
+
+            <div class="empty" id="emptyState">
+                <div class="empty-blocks" aria-hidden="true"><i></i><i></i><i></i></div>
+                <h3>Memory, made visible</h3>
+                <p>Press <b>Run</b> and every line of your program plays out here: the <b>call stack</b> on the left, objects on the <b>heap</b> to the right.</p>
+            </div>
+
+            <div class="pipeline glass" aria-live="polite">
+                <div class="stage-step" id="pFetch">
+                    <span class="stage-label"><i></i>Fetch</span>
+                    <code class="stage-body" id="fetchText">waiting for a run</code>
+                </div>
+                <div class="stage-link"><span></span></div>
+                <div class="stage-step" id="pDecode">
+                    <span class="stage-label"><i></i>Decode</span>
+                    <div class="stage-body" id="decodeText">—</div>
+                </div>
+                <div class="stage-link"><span></span></div>
+                <div class="stage-step" id="pExec">
+                    <span class="stage-label"><i></i>Execute</span>
+                    <div class="stage-body" id="execText">—</div>
+                </div>
+            </div>
+
+            <div class="stage-tools">
+                <button class="icon-btn glass" id="recenterBtn" title="Recenter camera" aria-label="Recenter camera" hidden>
+                    <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="2.2" fill="currentColor"/><path d="M8 1v3M8 12v3M1 8h3M12 8h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                </button>
+            </div>
+
+            <div class="legend glass" aria-label="Legend">
+                <span><i style="--c:var(--t-int)"></i>int</span>
+                <span><i style="--c:var(--t-float)"></i>float</span>
+                <span><i style="--c:var(--t-str)"></i>str</span>
+                <span><i style="--c:var(--t-bool)"></i>bool</span>
+                <span><i style="--c:var(--t-none)"></i>None</span>
+                <span><i style="--c:var(--t-fn)"></i>function</span>
+                <span><i class="ref"></i>reference</span>
+            </div>
+
+            <div class="transport glass">
+                <button class="icon-btn" id="firstBtn" title="First step" aria-label="First step"><svg viewBox="0 0 16 16"><path d="M3 3v10M13 3L6 8l7 5z" fill="currentColor" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg></button>
+                <button class="icon-btn" id="prevBtn" title="Step back (←)" aria-label="Step back"><svg viewBox="0 0 16 16"><path d="M10.5 3L5 8l5.5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                <button class="play" id="playBtn" title="Play / pause (space)" aria-label="Play"><svg viewBox="0 0 16 16" id="playIcon"><path d="M5 3v10l8-5z" fill="currentColor"/></svg></button>
+                <button class="icon-btn" id="nextBtn" title="Step forward (→)" aria-label="Step forward"><svg viewBox="0 0 16 16"><path d="M5.5 3L11 8l-5.5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                <button class="icon-btn" id="lastBtn" title="Last step" aria-label="Last step"><svg viewBox="0 0 16 16"><path d="M13 3v10M3 3l7 5-7 5z" fill="currentColor" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg></button>
+                <div class="scrub">
+                    <input type="range" id="scrubber" min="0" max="0" value="0" aria-label="Scrub through steps">
+                </div>
+                <span class="count" id="stepCount">0 / 0</span>
+                <button class="speed" id="speedBtn" title="Playback speed">1×</button>
+            </div>
+
+            <div class="stats" id="hud"></div>
+        </section>
+    </main>
+
+    <!-- level drawer -->
+    <div class="scrim" id="scrim" hidden></div>
+    <aside class="drawer" id="drawer" aria-label="Levels" hidden>
+        <div class="drawer-head">
+            <div class="search-wrap">
+                <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                <input id="levelSearch" type="search" placeholder="Search levels, concepts, difficulty…" autocomplete="off" aria-label="Search levels">
+                <kbd>esc</kbd>
+            </div>
+        </div>
+        <div class="drawer-body" id="trackList"></div>
+    </aside>
+
+    <!-- account dialog -->
+    <dialog class="dialog" id="authDialog">
+        <form method="dialog" class="auth" id="authForm" novalidate>
+            <div class="auth-head">
+                <span class="logo-glyph" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+                <h2 id="authTitle">Welcome back</h2>
+                <p id="authSub">Sign in to save your solutions and progress across devices.</p>
+            </div>
+            <div class="auth-tabs">
+                <button type="button" class="auth-tab active" data-auth="login">Sign in</button>
+                <button type="button" class="auth-tab" data-auth="register">Create account</button>
+            </div>
+            <label class="field" id="nameField" hidden><span>Display name</span><input name="name" autocomplete="nickname" maxlength="40"></label>
+            <label class="field"><span>Email</span><input name="email" type="email" autocomplete="email" required></label>
+            <label class="field"><span>Password</span><input name="password" type="password" autocomplete="current-password" minlength="8" required></label>
+            <p class="auth-error" id="authError" role="alert"></p>
+            <div class="auth-actions">
+                <button type="button" class="btn ghost" id="authCancel">Cancel</button>
+                <button type="submit" class="btn primary" id="authSubmit">Sign in</button>
+            </div>
+        </form>
+    </dialog>
+
+    <div class="toast" id="toast" hidden></div>
+
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>

@@ -114,7 +114,7 @@ function valueSpec(key, v, x, y, extra = {}) {
  * ctx: { tokens: TokenBook, pointers: [[container, index]], loops }
  */
 export function layoutStep(step, ctx) {
-  const spec = { frames: [], slots: [], values: [], cells: [], objects: [], arrows: [], markers: [], cursors: [], bounds: null };
+  const spec = { zones: [], frames: [], slots: [], values: [], cells: [], objects: [], arrows: [], markers: [], cursors: [], bounds: null };
   const heap = step.heap;
   const anchors = new Map();   // heap id -> {key, x, y} where arrows land
   const cellPos = new Map();   // heap id -> [{x, y}] centre of each cell
@@ -357,6 +357,11 @@ export function layoutStep(step, ctx) {
     spec.cursors.push({ key: `cursor:${cur.fid}:${cur.line}`, x: base.x, y: base.y, w: (base.w || 1) + 0.3, label: done ? 'loop done' : `for ${cur.target}`, done });
   }
 
+  // ---- floor captions for the two memory regions
+  const stackTop = Math.max(0, ...spec.frames.map((f) => f.top));
+  spec.zones.push({ key: 'zone:stack', label: 'CALL STACK', x: 0.35 + 3, y: stackTop + 0.9, w: 6 });
+  if (spec.objects.length) spec.zones.push({ key: 'zone:heap', label: 'HEAP', x: U.HEAP_X + 3, y: 0.9, w: 6 });
+
   // ---- bounds for the camera
   let minX = -0.5, maxX = U.FRAME_W + 0.5, minY = -2, maxY = 1;
   const grow = (x, y, w = 0, h = 0) => {
@@ -366,6 +371,7 @@ export function layoutStep(step, ctx) {
   spec.frames.forEach(f => grow(f.x, f.y, f.w, f.h));
   spec.objects.forEach(o => grow(o.x, o.y, o.w, o.h));
   spec.markers.forEach(m => grow(m.x, m.y, 1, 1));
+  spec.zones.forEach(z => grow(z.x, z.y, z.w, 0.8));
   spec.bounds = { minX, maxX, minY, maxY };
   return spec;
 }

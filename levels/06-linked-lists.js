@@ -8,6 +8,7 @@ def build(values):
     for v in reversed(values):
         head = ListNode(v, head)
     return head
+
 `;
 
 export default {
@@ -25,8 +26,9 @@ export default {
       fn: 'reverse_list',
       argTypes: ['linked'],
       returnType: 'linked',
-      starter: `${NODE}
-def reverse_list(head):
+      prelude: NODE,
+      demo: 'head = reverse_list(build([1, 2, 3]))',
+      starter: `${NODE}def reverse_list(head):
     prev = None
     while head:
         nxt = head.next
@@ -36,8 +38,13 @@ def reverse_list(head):
 
 head = reverse_list(build([1, 2, 3]))
 `,
-      solution: `${NODE}
-def reverse_list(head):
+      solutions: [
+        {
+          name: 'Iterative re-linking',
+          tags: ['time', 'space'],
+          time: 'O(n)', space: 'O(1)',
+          idea: 'Three pointers walk the list once, flipping one arrow per node.',
+          code: `def reverse_list(head):
     prev = None
     while head:
         nxt = head.next
@@ -45,9 +52,39 @@ def reverse_list(head):
         prev = head
         head = nxt
     return prev
-
-head = reverse_list(build([1, 2, 3]))
 `,
+        },
+        {
+          name: 'Recursion',
+          tags: ['time'],
+          time: 'O(n)', space: 'O(n)',
+          idea: 'Reverse the rest of the list, then hook the current node onto its tail. One frame per node.',
+          code: `def reverse_list(head):
+    if head is None or head.next is None:
+        return head
+    new_head = reverse_list(head.next)
+    head.next.next = head
+    head.next = None
+    return new_head
+`,
+        },
+        {
+          name: 'Copy values, rebuild',
+          tags: ['brute'],
+          time: 'O(n)', space: 'O(n)',
+          idea: 'Read the values into a Python list and build brand-new nodes in reverse. Doesn\'t reuse a single node.',
+          code: `def reverse_list(head):
+    values = []
+    while head:
+        values.append(head.val)
+        head = head.next
+    new_head = None
+    for v in values:
+        new_head = ListNode(v, new_head)
+    return new_head
+`,
+        },
+      ],
       tests: [
         { args: [[1, 2, 3, 4, 5]], expected: [5, 4, 3, 2, 1] },
         { args: [[1, 2]], expected: [2, 1] },
@@ -64,8 +101,9 @@ head = reverse_list(build([1, 2, 3]))
       fn: 'middle_node',
       argTypes: ['linked'],
       returnType: 'linked',
-      starter: `${NODE}
-def middle_node(head):
+      prelude: NODE,
+      demo: 'mid = middle_node(build([1, 2, 3, 4, 5]))\nprint(mid.val)',
+      starter: `${NODE}def middle_node(head):
     slow = fast = head
     # move slow by 1 and fast by 2 until fast reaches the end
     return slow
@@ -73,17 +111,51 @@ def middle_node(head):
 mid = middle_node(build([1, 2, 3, 4, 5]))
 print(mid.val)
 `,
-      solution: `${NODE}
-def middle_node(head):
+      solutions: [
+        {
+          name: 'Fast & slow pointers',
+          tags: ['time', 'space'],
+          time: 'O(n)', space: 'O(1)',
+          idea: 'One pass: when the runner going twice as fast finishes, the walker is halfway.',
+          code: `def middle_node(head):
     slow = fast = head
     while fast and fast.next:
         slow = slow.next
         fast = fast.next.next
     return slow
-
-mid = middle_node(build([1, 2, 3, 4, 5]))
-print(mid.val)
 `,
+        },
+        {
+          name: 'Count, then walk',
+          tags: ['space'],
+          time: 'O(n)', space: 'O(1)',
+          idea: 'Measure the length in one pass, then walk `length // 2` steps in a second pass.',
+          code: `def middle_node(head):
+    length = 0
+    node = head
+    while node:
+        length += 1
+        node = node.next
+    node = head
+    for _ in range(length // 2):
+        node = node.next
+    return node
+`,
+        },
+        {
+          name: 'Copy nodes into a list',
+          tags: ['brute'],
+          time: 'O(n)', space: 'O(n)',
+          idea: 'Turn the chain into an array of nodes so you can index the middle directly.',
+          code: `def middle_node(head):
+    nodes = []
+    while head:
+        nodes.append(head)
+        head = head.next
+    return nodes[len(nodes) // 2]
+`,
+        },
+      ],
       tests: [
         { args: [[1, 2, 3, 4, 5]], expected: [3, 4, 5] },
         { args: [[1, 2, 3, 4, 5, 6]], expected: [4, 5, 6] },
@@ -100,8 +172,9 @@ print(mid.val)
       fn: 'merge_lists',
       argTypes: ['linked', 'linked'],
       returnType: 'linked',
-      starter: `${NODE}
-def merge_lists(a, b):
+      prelude: NODE,
+      demo: 'merged = merge_lists(build([1, 3]), build([2, 4]))',
+      starter: `${NODE}def merge_lists(a, b):
     dummy = ListNode(0)
     tail = dummy
     # attach the smaller of a and b to tail, repeatedly
@@ -109,8 +182,13 @@ def merge_lists(a, b):
 
 merged = merge_lists(build([1, 3]), build([2, 4]))
 `,
-      solution: `${NODE}
-def merge_lists(a, b):
+      solutions: [
+        {
+          name: 'Dummy head, splice in place',
+          tags: ['time', 'space'],
+          time: 'O(n + m)', space: 'O(1)',
+          idea: 'Re-link the existing nodes; the only new node is the dummy anchor.',
+          code: `def merge_lists(a, b):
     dummy = ListNode(0)
     tail = dummy
     while a and b:
@@ -123,9 +201,43 @@ def merge_lists(a, b):
         tail = tail.next
     tail.next = a or b
     return dummy.next
-
-merged = merge_lists(build([1, 3]), build([2, 4]))
 `,
+        },
+        {
+          name: 'Recursive merge',
+          tags: ['time'],
+          time: 'O(n + m)', space: 'O(n + m)',
+          idea: 'The smaller head wins, and its `.next` is the merge of everything else. One frame per node.',
+          code: `def merge_lists(a, b):
+    if a is None:
+        return b
+    if b is None:
+        return a
+    if a.val <= b.val:
+        a.next = merge_lists(a.next, b)
+        return a
+    b.next = merge_lists(a, b.next)
+    return b
+`,
+        },
+        {
+          name: 'Collect, sort, rebuild',
+          tags: ['brute'],
+          time: 'O((n + m) log(n + m))', space: 'O(n + m)',
+          idea: 'Dump every value into a list, sort it, and build fresh nodes.',
+          code: `def merge_lists(a, b):
+    values = []
+    for node in (a, b):
+        while node:
+            values.append(node.val)
+            node = node.next
+    head = None
+    for v in sorted(values, reverse=True):
+        head = ListNode(v, head)
+    return head
+`,
+        },
+      ],
       tests: [
         { args: [[1, 2, 4], [1, 3, 4]], expected: [1, 1, 2, 3, 4, 4] },
         { args: [[], []], expected: [] },

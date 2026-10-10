@@ -1,91 +1,80 @@
-# CodeArt Blocks
+# codeart: see your code move
 
-Write Python and watch it run as 3D blocks: variables, lists, dicts, objects and
-the call stack, one executed line at a time.
-
-Open `visualizer/index.html` through any static server (ES modules don't load
-from `file://`), e.g. `npx http-server .` from the repo root, then visit
-`/visualizer/`.
-
-## Screenshots
+Write Python and watch it run as 3D blocks on a table. Variables, lists,
+dicts, objects and the call stack change one executed line at a time.
+This folder is the whole site for **codeart.fun**. Deployment steps are in
+[DEPLOY.md](DEPLOY.md).
 
 | | |
 | --- | --- |
-| ![Two Sum](screenshots/1-two-sum.png) | ![Reverse Linked List](screenshots/3-reverse-linked-list.png) |
-| ![Merge Sort](screenshots/4-merge-sort-stack.png) | ![Valid Parentheses, dark theme](screenshots/6-valid-parentheses-dark.png) |
+| ![Landing](screenshots/landing.png) | ![Two Sum](screenshots/two-sum.png) |
+| ![Ranked solutions](screenshots/solutions.png) | ![Linked list, light theme](screenshots/linked-list-light.png) |
+
+## Features
+
+- **Fetch / Decode / Execute.** Every step shows the line that runs, a
+  plain-English description of what it does to memory (`APPEND`, `SWAP`,
+  `LINK`, `CALL`, …), and the animation itself. Play, pause, step or scrub
+  backwards.
+- **Tabletop memory.**
+  - Stack frames sit on the left as trays.
+  - Heap objects sit on the right: lists, dicts, sets, strings, grids, and
+    class instances (linked lists, trees).
+  - References are drawn as arcing arrows; index variables appear as pins
+    and `for` loops as a glowing cursor.
+- **36 levels in 8 tracks**, from memory basics through two pointers,
+  hashing, stacks, sorting, linked lists and trees to dynamic programming.
+- **82 ranked solutions**, tiered as *Optimal* / *Best time* / *Best space* /
+  *Alternative* / *Brute force*. Each lists its time and space complexity and
+  a step count measured on the example. Any solution can be animated.
+- **Accounts (optional).** A PHP/MySQL API stores progress, editor drafts
+  and every submission. Without the API, everything still works and lives in
+  `localStorage`.
 
 ## How it works
 
 ```
-your code ──► py/tracer.py (in Pyodide) ──► steps[] ──► js/model.js ──► js/scene.js (Three.js)
-              sys.settrace, one snapshot      JSON        layout + FETCH/DECODE text   animated blocks
-              per executed line
+your code ─► py/tracer.py (Pyodide) ─► steps[] ─► js/model.js ─► js/scene.js (Three.js)
+             sys.settrace snapshot      JSON       layout + decode   tabletop renderer
+             after every line
 ```
 
-1. **Trace.** `tracer.py` runs the program under `sys.settrace` and records a
-   snapshot after every line: the stack frames, every reachable heap object,
-   the branch taken by `if`/`while`/`for`, the loop cursor position and any
-   output. Step and opcode budgets stop infinite loops.
-2. **Model.** `model.js` turns a snapshot into a scene description (frames,
-   value cubes, list cells, arrows, index pointers such as `i`, `left` or `mid`,
-   and loop cursors) and decodes what changed (`APPEND`, `SWAP`, `INSERT`,
-   `LINK`, `CALL`, …). It has no DOM or Three.js dependency, so Node can test it.
-3. **Scene.** `scene.js` reconciles each description by key. Blocks that
-   persist glide to their new position, new blocks drop or fly in, and removed
-   blocks lift out. Rewinding just reconciles to an earlier step.
+1. **Trace.** `tracer.py` runs the program under `sys.settrace` and records
+   a snapshot after every line: frames, reachable heap objects, branch
+   outcomes, loop positions and stdout. Step and opcode budgets stop
+   infinite loops.
+2. **Model.** `model.js` turns each snapshot into keyed scene entities and
+   decodes what changed. It has no DOM or WebGL dependency, so Node can
+   test it.
+3. **Scene.** `scene.js` reconciles entities by key. Blocks that persist
+   glide (and hop), new ones drop in, removed ones lift away. Rewinding is
+   just reconciling to an earlier step.
 
-| Python concept | Block |
-| --- | --- |
-| variable | name plate on a stack frame + value cube (or a socket with an arrow) |
-| int / float / str / bool / None | coloured cube labelled with the value |
-| list / tuple / str / set / deque | row of indexed cells on the heap |
-| list of lists | grid (unless rows are shared, in which case arrows show the aliasing) |
-| dict | rows of key cube → value cube |
-| class instance | card of `.field` rows; references become arrows (linked lists, trees) |
-| function call | new frame stacked on top; `return` pops it |
-| `for x in seq` | yellow cursor walking the cells |
-| `seq[i]` | coloured pointer under cell `i` |
+## Adding levels (on the way to 200)
 
-## Adding levels (the 200-question plan)
-
-Levels are plain data in `levels/NN-track.js`. Each track exports
-`{ id, title, blurb, levels: [...] }` and is listed in `levels/index.js`.
+Levels are data in `levels/NN-track.js`:
 
 ```js
 {
-  id: 'two-sum',               // unique, used in the URL hash
-  title: 'Two Sum',
-  difficulty: 'Easy',          // Intro | Easy | Medium | Hard
-  concepts: ['dict'],
-  prompt: 'Markdown-lite: `code`, **bold**, *italic*, blank line = paragraph',
+  id: 'two-sum', title: 'Two Sum', difficulty: 'Easy', concepts: ['dict'],
+  prompt: 'Markdown-lite: `code`, **bold**, *italic*',
   watch: 'What to look for in the animation',
-  fn: 'two_sum',               // function the tests call
-  starter: `...`,              // keep a small example call at the bottom
-  solution: `...`,             // reference solution, used by "Watch solution"
+  fn: 'two_sum',                    // the function the tests call
+  demo: 'print(two_sum([2, 7, 11, 15], 9))',
+  prelude: '',                      // optional shared code (e.g. ListNode)
+  starter: `...`,                   // prelude + stub + demo
+  solutions: [{ name, tags: ['time', 'space' | 'brute'], time: 'O(n)', space: 'O(1)', idea, code }],
   tests: [{ args: [[2, 7, 11, 15], 9], expected: [0, 1] }],
-  // optional:
-  compare: 'unordered' | 'unordered_nested' | 'float',
-  inplace: 0,                  // compare args[0] after the call instead of the return value
-  pure: true,                  // fail if the inputs were mutated
-  argTypes: ['linked', 'tree'],// build ListNode / TreeNode from JSON lists
-  returnType: 'linked' | 'tree',
+  // optional: compare ('unordered' | 'unordered_nested' | 'float'), inplace: 0,
+  //           pure: true, argTypes: ['linked' | 'tree'], returnType
 }
 ```
 
-Then validate:
+Then run the checks:
 
 ```sh
-node visualizer/tools/validate-levels.mjs        # all levels
-node visualizer/tools/validate-levels.mjs two-sum # just one
-node visualizer/tools/test-model.mjs --verbose   # model smoke test with decoded steps
+node codeart-fun/tools/validate-levels.mjs   # schema, every solution vs tests, traces, layout
+node codeart-fun/tools/test-model.mjs        # model smoke test
+bash codeart-fun/tools/test-api.sh           # PHP API end-to-end (SQLite)
+node codeart-fun/tools/build-hero.mjs        # re-record the landing demo
 ```
-
-The validator checks the schema, that the solution passes every test, that the
-starter does not, and that both trace and lay out without problems. It needs
-`python3` (3.11+).
-
-## Dependencies
-
-Three.js 0.160 and Pyodide 0.26 load from `cdn.jsdelivr.net`. There is no build
-step. The whole `visualizer/` folder is self-contained and can move to its own
-repo unchanged.
