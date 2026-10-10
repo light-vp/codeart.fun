@@ -1,7 +1,8 @@
 # Deploying codeart.fun on Hostinger
 
-The `codeart-fun/` folder **is** the website: static HTML/JS/CSS plus a small
-PHP API in `api/`. There is no build step.
+This repository **is** the website: static HTML/JS/CSS plus a small PHP API in
+`api/`. There is no build step, so Hostinger deploys straight from `main` and
+no GitHub Action is needed.
 
 ## 1. Database (one time)
 
@@ -21,22 +22,21 @@ PHP API in `api/`. There is no build step.
 PHP **8.1 or newer** is required (hPanel → Advanced → PHP Configuration). Check
 that the `pdo_mysql` and `mbstring` extensions are enabled; they are by default.
 
-## 3. Upload
+## 3. Connect Hostinger to this repo (auto-deploy from `main`)
 
-Point the codeart.fun domain at a website in hPanel, then upload the
-*contents* of `codeart-fun/` to that site's `public_html/`, using File
-Manager, FTP, or hPanel → Advanced → **Git**, which deploys from this repo. The
-result should look like this:
+1. hPanel → add **codeart.fun** as a website. Then open **Advanced → Git** for it.
+2. Repository: `git@github.com:light-vp/codeart.fun.git` · Branch: **`main`** ·
+   Install path: `public_html`.
+3. Copy the SSH key Hostinger shows. In GitHub → this repo → **Settings → Deploy
+   keys**, add it **read-only**. Use a per-repo key, never an account SSH key.
+4. Turn on **Auto-deployment**, copy its webhook URL, and add it in GitHub →
+   **Settings → Webhooks** (content type `application/json`, push events).
+5. Put `api/config.php` on the server once, with File Manager (step 2 above).
+   It is git-ignored, so deploys never overwrite or delete it.
 
-```
-public_html/
-  index.html  app.html  favicon.svg  .htaccess
-  css/  js/  py/  levels/  data/
-  api/   (config.php lives here, next to schema.sql)
-```
-
-`tools/`, `screenshots/` and the Markdown files don't need to be uploaded.
-If they are, `.htaccess` blocks them anyway.
+Every push to `main` is then live within seconds. Dev-only files (`tools/`,
+`screenshots/`, Markdown) are copied too, but the root `.htaccess` blocks
+access to them.
 
 Enable the free SSL certificate (hPanel → Security → SSL). `.htaccess` then
 redirects every request to HTTPS.
@@ -71,9 +71,9 @@ with SameSite cookies.
 
 ```sh
 # static only (accounts hidden; progress kept in localStorage)
-npx http-server codeart-fun
+npx http-server .
 
 # with the API, against SQLite
-bash codeart-fun/tools/test-api.sh          # end-to-end API tests
-node codeart-fun/tools/validate-levels.mjs  # every level and solution
+bash tools/test-api.sh          # end-to-end API tests
+node tools/validate-levels.mjs  # every level and solution
 ```

@@ -2,8 +2,8 @@
 
 Write Python and watch it run as 3D blocks on a table. Variables, lists,
 dicts, objects and the call stack change one executed line at a time.
-This folder is the whole site for **codeart.fun**. Deployment steps are in
-[DEPLOY.md](DEPLOY.md).
+This repository is the whole site for **codeart.fun**, deployed by Hostinger
+straight from `main`. Setup steps are in [DEPLOY.md](DEPLOY.md).
 
 | | |
 | --- | --- |
@@ -73,8 +73,8 @@ Levels are data in `levels/NN-track.js`:
 Then run the checks:
 
 ```sh
-node codeart-fun/tools/validate-levels.mjs   # schema, every solution vs tests, traces, layout
-node codeart-fun/tools/test-model.mjs        # model smoke test
-bash codeart-fun/tools/test-api.sh           # PHP API end-to-end (SQLite)
-node codeart-fun/tools/build-hero.mjs        # re-record the landing demo
+node tools/validate-levels.mjs   # schema, every solution vs tests, traces, layout
+node tools/test-model.mjs        # model smoke test
+bash tools/test-api.sh           # PHP API end-to-end (SQLite)
+node tools/build-hero.mjs        # re-record the landing demo
 ```

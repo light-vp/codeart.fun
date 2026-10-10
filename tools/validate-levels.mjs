@@ -3,7 +3,7 @@
 //   * every solution passes every test, and at least one is tagged best-time
 //   * the starter code is not already a solution (at least one test fails)
 //   * starter and every solution trace cleanly and lay out in the 3D model
-// Requires python3 on PATH. Usage: node codeart-fun/tools/validate-levels.mjs [level-id ...]
+// Requires python3 on PATH. Usage: node tools/validate-levels.mjs [level-id ...]
 import { execFileSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';

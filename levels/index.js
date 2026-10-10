@@ -1,6 +1,6 @@
 // Level registry. To add a level, append it to the right track file (or add a
 // new track file and list it here), then run:
-//   node codeart-fun/tools/validate-levels.mjs
+//   node tools/validate-levels.mjs
 import foundations from './01-foundations.js';
 import arrays from './02-arrays.js';
 import hashing from './03-hashing.js';

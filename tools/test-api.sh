@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # End-to-end test of the PHP API against a throwaway SQLite database.
-# Usage: bash codeart-fun/tools/test-api.sh   (needs php with pdo_sqlite, curl, sqlite3 not required)
+# Usage: bash tools/test-api.sh   (needs php with pdo_sqlite, curl, sqlite3 not required)
 set -euo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
 root="$(dirname "$here")"

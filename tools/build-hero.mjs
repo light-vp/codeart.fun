@@ -1,5 +1,5 @@
 // Pre-records the landing-page demo so the hero animates without loading Python.
-// Usage: node codeart-fun/tools/build-hero.mjs
+// Usage: node tools/build-hero.mjs
 import { writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
