@@ -27,7 +27,7 @@
 .p-title { margin: 0 0 12px; font-family: var(--font-display); font-size: 1.45rem; line-height: 1.1; letter-spacing: 0.01em; font-weight: 400; }
 .p-title .solved { width: 22px; height: 22px; border: 2px solid var(--ink); background: var(--t-bool); color: var(--on-colour); font: 700 12px var(--font-body); }
 .prose code { color: var(--ink); background: var(--paper-2); border: 1.5px solid var(--rule-2); padding: 0 5px; border-radius: 4px; }
-.watch { margin: 16px 0; border-radius: 10px; background: var(--neon-soft); border: var(--b) solid var(--ink); box-shadow: var(--shadow-sm); }
+.watch { margin: 16px 0; padding: 12px 14px; border-radius: 10px; background: var(--neon-soft); border: var(--b) solid var(--ink); box-shadow: var(--shadow-sm); }
 .watch-label { font: 700 11px var(--mono); letter-spacing: 0.12em; color: var(--neon); }
 .example { background: var(--paper); border: 2px solid var(--ink); }
 .sol { border: var(--b) solid var(--ink); background: var(--paper); margin-bottom: 14px; box-shadow: var(--shadow-sm); }
@@ -137,3 +137,5 @@
     .stage { border-top: var(--b) solid var(--ink); }
 }
 :root[data-theme="light"] .scrim { background: rgba(17, 17, 17, 0.28); }
+/* labels stay mono in the sketchbook; app.css sets them in the body font */
+.p-eyebrow, .examples h4, .tab-count, .ring, .sol-rank, .sol-steps, .hist-main span, .drawer-tools, .track-count, .lv-num, .stats, .cam-help dt, .diff, .tier, .file { font-family: var(--font-mono); }

@@ -756,6 +756,15 @@ $('camRotL').onclick = () => state.scene?.rotateBy(Math.PI / 4);
 $('camRotR').onclick = () => state.scene?.rotateBy(-Math.PI / 4);
 document.querySelectorAll('.cam-view').forEach((b) => { b.onclick = () => state.scene?.setView(b.dataset.view); });
 $('camDrag').onclick = () => state.scene?.setDragMode(state.scene.dragMode === 'pan' ? 'rotate' : 'pan');
+// rotate, views and the drag mode live behind a "more" button; their keys always work
+const setCamMore = (open) => {
+  $('camMore').hidden = !open;
+  $('camMoreBtn').setAttribute('aria-expanded', String(open));
+  $('camMoreBtn').classList.toggle('on', open);
+  store.set('codeart-cam-more', open);
+};
+setCamMore(store.get('codeart-cam-more', false));
+$('camMoreBtn').onclick = () => setCamMore($('camMore').hidden);
 const closeCamHelp = () => { $('camHelpCard').hidden = true; $('camHelp').setAttribute('aria-expanded', 'false'); };
 $('camHelp').onclick = (e) => {
   e.stopPropagation();
