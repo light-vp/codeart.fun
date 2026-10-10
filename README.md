@@ -27,6 +27,10 @@ straight from `main`. Setup steps are in [DEPLOY.md](DEPLOY.md).
 - **82 ranked solutions**, tiered as *Optimal* / *Best time* / *Best space* /
   *Alternative* / *Brute force*. Each lists its time and space complexity and
   a step count measured on the example. Any solution can be animated.
+- **Movable panels.** Drag the problem and code panels by their headers,
+  resize them from any edge or corner, and they snap to the edges and to each
+  other. Panels pushed against the left or right edge dock and the 3D table
+  makes room. The layout is saved per account; *Reset layout* restores it.
 - **Accounts (optional).** A PHP/MySQL API stores progress, editor drafts
   and every submission. Without the API, everything still works and lives in
   `localStorage`.
@@ -75,6 +79,7 @@ Then run the checks:
 ```sh
 node tools/validate-levels.mjs   # schema, every solution vs tests, traces, layout
 node tools/test-model.mjs        # model smoke test
+node tools/test-layout.mjs       # movable panel geometry
 bash tools/test-api.sh           # PHP API end-to-end (SQLite)
 node tools/build-hero.mjs        # re-record the landing demo
 ```
