@@ -5,6 +5,9 @@
 // "away from the camera" and board z into height. Blocks that persist between
 // steps glide (and hop) to their new place, new blocks drop in, removed blocks
 // lift away, so rewinding is simply reconciling to an earlier description.
+//
+// Camera: by default it follows the program, re-framing every step. Any manual
+// move (drag, wheel, keys, toolbar) switches follow off until asked back.
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
@@ -65,6 +68,9 @@ export const THEMES = {
   },
 };
 const DEFAULT_THEME = 'minimal-dark';
+
+// camera views: pitch above the table and yaw around it, in degrees
+const VIEWS = { angled: { pitch: 54, yaw: -8 }, top: { pitch: 88, yaw: 0 }, front: { pitch: 24, yaw: 0 } };
 
 // heights above the table (board z)
 const H = { tray: 0.22, cell: 0.06, plate: 0.08, cube: 0.84 };
@@ -142,7 +148,9 @@ export class BlockScene {
     this.theme = THEMES[DEFAULT_THEME];
     this.ents = new Map();
     this.exiting = new Set();
-    this.autoFit = true;
+    this.follow = true;
+    this.viewName = 'angled';
+    this.view = { ...VIEWS.angled };
     this.lastSpec = null;
     this.camGoal = null;
     this.insets = { top: 0, bottom: 0, left: 0, right: 0 };   // px covered by overlays
@@ -165,11 +173,14 @@ export class BlockScene {
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.08;
+    this.controls.screenSpacePanning = false;   // pan slides across the table
+    this.controls.zoomToCursor = true;
     this.controls.maxPolarAngle = Math.PI * 0.44;
-    this.controls.minDistance = 8;
-    this.controls.maxDistance = 220;
+    this.controls.minDistance = 4;
+    this.controls.maxDistance = 260;
     this.controls.enabled = interactive;
-    this.controls.addEventListener('start', () => { this.autoFit = false; this.onUserCamera?.(); });
+    this.setDragMode('pan');
+    this.controls.addEventListener('start', () => this.userMoved());
 
     this.hemi = new THREE.HemisphereLight(0xffffff, 0x222222, 1);
     this.sun = new THREE.DirectionalLight(0xffffff, 2);
@@ -185,6 +196,9 @@ export class BlockScene {
     this.floor.position.z = -0.001;
     this.floor.receiveShadow = true;
     this.root.add(this.floor);
+
+    this.raycaster = new THREE.Raycaster();
+    if (interactive) this.renderer.domElement.addEventListener('dblclick', (e) => this.focusAt(e.clientX, e.clientY));
 
     this.applyTheme('dark');
     new ResizeObserver(() => this.resize()).observe(container);
@@ -229,31 +243,132 @@ export class BlockScene {
     this.renderer.setSize(w, h, false);
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
-    if (this.lastSpec && this.autoFit) this.fit(this.lastSpec.bounds, true);
+    if (this.lastSpec && this.follow) this.fit(this.lastSpec.bounds, true);
   }
 
-  recenter() { this.autoFit = true; if (this.lastSpec) this.fit(this.lastSpec.bounds); }
+  // --------------------------------------------------------------- camera
+  setInsets(insets) { this.insets = { ...this.insets, ...insets }; if (this.lastSpec && this.follow) this.fit(this.lastSpec.bounds); }
 
-  // Frame the board bounds from above-front at a fixed pitch.
-  setInsets(insets) { this.insets = { ...this.insets, ...insets }; if (this.lastSpec && this.autoFit) this.fit(this.lastSpec.bounds); }
+  cameraState() { return { follow: this.follow, view: this.viewName, drag: this.dragMode }; }
+  changed() { this.onCameraChange?.(this.cameraState()); }
+
+  setFollow(on) {
+    this.follow = on;
+    if (on && this.lastSpec) this.fit(this.lastSpec.bounds);
+    this.changed();
+  }
+
+  recenter() { this.setFollow(true); }
+
+  userMoved() {
+    this.camGoal = null;
+    if (this.follow) { this.follow = false; this.changed(); }
+  }
+
+  // which mouse button pans and which rotates; touch follows the left button
+  setDragMode(mode) {
+    this.dragMode = mode === 'rotate' ? 'rotate' : 'pan';
+    const pan = this.dragMode === 'pan';
+    this.controls.mouseButtons = { LEFT: pan ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: pan ? THREE.MOUSE.ROTATE : THREE.MOUSE.PAN };
+    this.controls.touches = { ONE: pan ? THREE.TOUCH.PAN : THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_ROTATE };
+    this.changed();
+  }
+
+  setView(name) {
+    if (!VIEWS[name]) return;
+    this.viewName = name;
+    this.view = { ...VIEWS[name] };
+    this.fit(this.lastSpec ? this.lastSpec.bounds : { minX: 0, maxX: 22, minY: -8, maxY: 2 });
+    this.changed();
+  }
+
+  // glide to a goal; any manual move pauses follow
+  goTo(target, pos) {
+    if (this.follow) { this.follow = false; this.changed(); }
+    this.camGoal = { target, pos };
+  }
+
+  // where the camera is heading, or where it is when it is still
+  aim() {
+    return { t: (this.camGoal ? this.camGoal.target : this.controls.target).clone(), p: (this.camGoal ? this.camGoal.pos : this.camera.position).clone() };
+  }
+
+  zoomBy(factor) {
+    const { t, p } = this.aim();
+    const d = p.sub(t);
+    const len = THREE.MathUtils.clamp(d.length() * factor, this.controls.minDistance, this.controls.maxDistance);
+    this.goTo(t, t.clone().add(d.setLength(len)));
+  }
+
+  rotateBy(rad) {
+    const { t, p } = this.aim();
+    const d = p.sub(t).applyAxisAngle(new THREE.Vector3(0, 1, 0), rad);
+    this.goTo(t, t.clone().add(d));
+  }
+
+  // pan along the table, relative to where the camera faces
+  panBy(right, forward) {
+    const { t, p } = this.aim();
+    const dist = p.distanceTo(t);
+    const fwd = t.clone().sub(p).setY(0);
+    if (fwd.lengthSq() < 1e-6) fwd.set(0, 0, -1);   // looking straight down
+    fwd.normalize();
+    const rgt = new THREE.Vector3().crossVectors(fwd, new THREE.Vector3(0, 1, 0)).normalize();
+    const delta = rgt.multiplyScalar(right * dist * 0.08).add(fwd.multiplyScalar(forward * dist * 0.08));
+    this.goTo(t.add(delta), p.add(delta));
+  }
+
+  // double-click: fly to whatever is under the pointer
+  focusAt(clientX, clientY) {
+    const r = this.renderer.domElement.getBoundingClientRect();
+    const ndc = new THREE.Vector2(((clientX - r.left) / r.width) * 2 - 1, -((clientY - r.top) / r.height) * 2 + 1);
+    this.raycaster.setFromCamera(ndc, this.camera);
+    const hit = this.raycaster.intersectObjects(this.root.children, true).find((h) => h.object.visible && h.object.type === 'Mesh');
+    if (!hit) return;
+    const offset = this.camera.position.clone().sub(this.controls.target).multiplyScalar(0.6);
+    if (offset.length() < this.controls.minDistance * 1.5) offset.setLength(this.controls.minDistance * 1.5);
+    this.goTo(hit.point.clone(), hit.point.clone().add(offset));
+  }
+
+  // keyboard camera, once the table has focus; returns whether the key was used
+  handleKey(e) {
+    if (e.ctrlKey || e.metaKey || e.altKey) return false;
+    const map = {
+      w: () => this.panBy(0, 1), s: () => this.panBy(0, -1), a: () => this.panBy(-1, 0), d: () => this.panBy(1, 0),
+      q: () => this.rotateBy(Math.PI / 8), e: () => this.rotateBy(-Math.PI / 8),
+      '+': () => this.zoomBy(0.8), '=': () => this.zoomBy(0.8), '-': () => this.zoomBy(1.25), _: () => this.zoomBy(1.25),
+      f: () => this.setFollow(true), v: () => this.setView('angled'), t: () => this.setView('top'), g: () => this.setView('front'),
+    };
+    const run = map[e.key.toLowerCase()];
+    if (!run) return false;
+    run();
+    return true;
+  }
+
+  // Frame the board bounds from the current view, inside the area the
+  // overlays leave free.
 
   fit(b, instant = false) {
     const pad = 1.2;
     const cx = (b.minX + b.maxX) / 2, cy = (b.minY + b.maxY) / 2;
     const w = b.maxX - b.minX + pad * 2, d = b.maxY - b.minY + pad * 2;
-    const pitch = THREE.MathUtils.degToRad(54), yaw = THREE.MathUtils.degToRad(-8);
+    const pitch = THREE.MathUtils.degToRad(this.view.pitch), yaw = THREE.MathUtils.degToRad(this.view.yaw);
     const t = Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2));
     const W = this.container.clientWidth || 1, Hh = this.container.clientHeight || 1;
     const { top, bottom, left, right } = this.insets;
     const freeH = Math.max(0.3, (Hh - top - bottom) / Hh), freeW = Math.max(0.3, (W - left - right) / W);
     // the table recedes, so its depth shrinks on screen by sin(pitch)
-    const dist = Math.max((d * Math.sin(pitch) + 1.5) / 2 / t / freeH, w / 2 / (t * this.camera.aspect) / freeW, 12) * 1.02;
+    const dist = Math.max((d * Math.sin(pitch) + 1.6 * Math.cos(pitch)) / 2 / t / freeH, w / 2 / (t * this.camera.aspect) / freeW, 12) * 1.02;
     const dir = new THREE.Vector3(Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), Math.cos(yaw) * Math.cos(pitch));
     const target = new THREE.Vector3(cx, 0, -cy);
     // slide the view so the content centres in the area not covered by overlays
     const perPx = (2 * dist * t) / Hh;
-    const up = new THREE.Vector3(0, 1, 0).sub(dir.clone().multiplyScalar(dir.y)).normalize();
-    const rightV = new THREE.Vector3().crossVectors(up, dir).normalize().negate();
+    // straight down, "up" on screen is away across the table
+    const worldUp = Math.abs(dir.y) > 0.98 ? new THREE.Vector3(0, 0, -1) : new THREE.Vector3(0, 1, 0);
+    const up = worldUp.clone().sub(dir.clone().multiplyScalar(dir.dot(worldUp))).normalize();
+    // camera-right on screen is up × dir; to push the content away from a
+    // left-hand overlay the target moves left, and vice versa
+    const rightV = new THREE.Vector3().crossVectors(up, dir).normalize();
     target.addScaledVector(up, ((top - bottom) / 2) * perPx).addScaledVector(rightV, -((left - right) / 2) * perPx);
     const pos = target.clone().addScaledVector(dir, dist);
     this.camGoal = { target, pos };
@@ -539,7 +654,7 @@ export class BlockScene {
     }
 
     this.animUntil = now + duration + 60;
-    if (this.autoFit) this.fit(spec.bounds, duration === 0 && !this.camGoal);
+    if (this.follow) this.fit(spec.bounds, duration === 0 && !this.camGoal);
     this.updateArrows();
   }
 
@@ -591,10 +706,12 @@ export class BlockScene {
     if (moving || this.wasMoving || now < (this.animUntil || 0)) this.updateArrows();
     this.wasMoving = moving;
 
-    if (this.autoFit && this.camGoal) {
+    if (this.camGoal) {
       const k = 1 - Math.exp(-dt * 4.5);
       this.controls.target.lerp(this.camGoal.target, k);
       this.camera.position.lerp(this.camGoal.pos, k);
+      // a manual goal is done once reached, so the controls take over again
+      if (!this.follow && this.camera.position.distanceTo(this.camGoal.pos) < 0.01 && this.controls.target.distanceTo(this.camGoal.target) < 0.01) this.camGoal = null;
     }
     this.controls.update();
     this.renderer.render(this.scene, this.camera);

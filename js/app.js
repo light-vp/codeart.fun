@@ -84,12 +84,14 @@ async function initScene() {
     const { BlockScene } = await import('./scene.js');
     state.scene = new BlockScene($('viewport'));
     state.scene.setTheme(sceneTheme());
-    state.scene.onUserCamera = () => { $('recenterBtn').hidden = false; };
+    state.scene.onCameraChange = renderCamera;
+    renderCamera(state.scene.cameraState());
     const measure = () => {
       const stage = document.querySelector('.stage').getBoundingClientRect();
       const pipe = document.querySelector('.pipeline').getBoundingClientRect();
       const transport = document.querySelector('.transport').getBoundingClientRect();
-      state.scene.setInsets({ top: pipe.bottom - stage.top + 8, bottom: stage.bottom - transport.top + 8 });
+      const cam = document.querySelector('.cam').getBoundingClientRect();
+      state.scene.setInsets({ top: pipe.bottom - stage.top + 8, bottom: stage.bottom - transport.top + 8, right: stage.right - cam.left + 8 });
     };
     measure();
     new ResizeObserver(measure).observe(document.querySelector('.stage'));
@@ -127,29 +129,53 @@ function markSolved(id) {
 }
 
 // ================================================================ drawer
+// Tracks are collapsible and which ones are open is remembered. The current
+// level's track always opens, and a search opens every track with a match.
 let kbIndex = -1;
+const openTracks = new Set([].concat(store.get('codeart-open-tracks', [])));
+const saveOpenTracks = () => store.set('codeart-open-tracks', [...openTracks]);
+const CHEVRON = '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M4 2.5L7.5 6 4 9.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
 function renderTracks() {
   const q = $('levelSearch').value.trim().toLowerCase();
+  let shown = 0;
   $('trackList').innerHTML = TRACKS.map((track) => {
     const levels = LEVELS.filter((l) => l.track === track.id && (!q || `${l.title} ${l.concepts.join(' ')} ${l.difficulty} ${track.title}`.toLowerCase().includes(q)));
     if (!levels.length) return '';
+    shown += levels.length;
     const all = LEVELS.filter((l) => l.track === track.id);
     const done = all.filter((l) => state.progress[l.id]).length;
-    return `<section class="track">
-      <div class="track-head"><h3>${esc(track.title)}</h3><span class="bar-mini"><i style="width:${(done / all.length) * 100}%"></i></span><span>${done}/${all.length}</span></div>
-      ${q ? '' : `<p>${esc(track.blurb)}</p>`}
+    const open = q ? true : openTracks.has(track.id);
+    return `<section class="track ${open ? 'open' : ''}">
+      <button class="track-toggle" aria-expanded="${open}" aria-controls="tl-${track.id}" data-toggle="${track.id}">
+        <span class="track-chev">${CHEVRON}</span>
+        <span class="track-name"><b>${esc(track.title)}</b><span>${esc(track.blurb)}</span></span>
+        <span class="track-count"><span class="bar-mini"><i style="width:${(done / all.length) * 100}%"></i></span>${done}/${all.length}</span>
+      </button>
+      <div class="track-levels" id="tl-${track.id}" ${open ? '' : 'hidden'}>
       ${levels.map((l) => `<button class="lv ${state.level && state.level.id === l.id ? 'active' : ''} ${state.progress[l.id] ? 'done' : ''}" data-id="${l.id}">
           <span class="lv-num">${LEVELS.indexOf(l) + 1}</span>
           <span class="lv-title">${esc(l.title)}</span>
           <span class="diff ${l.difficulty.toLowerCase()}">${l.difficulty}</span>
         </button>`).join('')}
+      </div>
     </section>`;
   }).join('') || '<p class="empty-note">No levels match that search.</p>';
+  $('toggleAllTracks').textContent = TRACKS.every((t) => openTracks.has(t.id)) ? 'Collapse all' : 'Expand all';
+  $('toggleAllTracks').hidden = !!q;
+  $('levelSummary').textContent = q ? `${shown} match${shown === 1 ? '' : 'es'}` : `${solvedCount()} of ${LEVELS.length} solved`;
   kbIndex = -1;
+}
+
+function toggleTrack(id) {
+  if (openTracks.has(id)) openTracks.delete(id); else openTracks.add(id);
+  saveOpenTracks();
+  renderTracks();
 }
 
 function openDrawer() {
   if (state.mode !== 'levels') setMode('levels');
+  if (state.level) { openTracks.add(state.level.track); saveOpenTracks(); }
   $('drawer').hidden = false;
   $('scrim').hidden = false;
   $('levelSearch').value = '';
@@ -162,7 +188,7 @@ function openDrawer() {
 function closeDrawer() { $('drawer').hidden = true; $('scrim').hidden = true; }
 
 function moveKb(delta) {
-  const items = [...$('trackList').querySelectorAll('.lv')];
+  const items = [...$('trackList').querySelectorAll('.track-levels:not([hidden]) .lv')];
   if (!items.length) return;
   items[kbIndex]?.classList.remove('kb');
   kbIndex = (kbIndex + delta + items.length) % items.length;
@@ -656,7 +682,6 @@ $('speedBtn').onclick = () => {
   state.speed = SPEEDS[(SPEEDS.indexOf(state.speed) + 1) % SPEEDS.length];
   $('speedBtn').textContent = `${state.speed}×`;
 };
-$('recenterBtn').onclick = () => { state.scene?.recenter(); $('recenterBtn').hidden = true; };
 $('levelsBtn').onclick = openDrawer;
 $('scrim').onclick = closeDrawer;
 $('levelSearch').oninput = renderTracks;
@@ -664,11 +689,22 @@ $('levelSearch').onkeydown = (e) => {
   if (e.key === 'ArrowDown') { e.preventDefault(); moveKb(1); }
   else if (e.key === 'ArrowUp') { e.preventDefault(); moveKb(-1); }
   else if (e.key === 'Enter') {
-    const target = $('trackList').querySelector('.lv.kb') || $('trackList').querySelector('.lv');
+    const target = $('trackList').querySelector('.lv.kb') || $('trackList').querySelector('.track-levels:not([hidden]) .lv');
     if (target) { openLevel(target.dataset.id); closeDrawer(); }
   }
 };
-$('trackList').onclick = (e) => { const b = e.target.closest('.lv'); if (b) { openLevel(b.dataset.id); closeDrawer(); } };
+$('trackList').onclick = (e) => {
+  const t = e.target.closest('[data-toggle]');
+  if (t) { toggleTrack(t.dataset.toggle); return; }
+  const b = e.target.closest('.lv');
+  if (b) { openLevel(b.dataset.id); closeDrawer(); }
+};
+$('toggleAllTracks').onclick = () => {
+  const allOpen = TRACKS.every((t) => openTracks.has(t.id));
+  TRACKS.forEach((t) => (allOpen ? openTracks.delete(t.id) : openTracks.add(t.id)));
+  saveOpenTracks();
+  renderTracks();
+};
 $('problemPane').onclick = (e) => {
   const nav = e.target.closest('[data-nav]');
   if (nav) { openLevel(LEVELS[LEVELS.indexOf(state.level) + Number(nav.dataset.nav)].id); return; }
@@ -700,9 +736,43 @@ document.querySelectorAll('.seg-btn').forEach((t) => { t.onclick = () => setMode
 document.querySelectorAll('.tab').forEach((t) => { t.onclick = () => setTab(t.dataset.tab); });
 document.querySelectorAll('.ctab').forEach((t) => { t.onclick = () => showConsole(t.dataset.pane); });
 bindLookButtons({ themeBtn: $('themeBtn'), styleBtn: $('styleBtn'), onChange: () => state.scene?.setTheme(sceneTheme()) });
+// ================================================================ camera
+function renderCamera(cam) {
+  $('camFollow').classList.toggle('on', cam.follow);
+  $('camFollow').setAttribute('aria-pressed', String(cam.follow));
+  $('camFollow').title = cam.follow ? 'Following the program (F)' : 'Free camera: click to follow the program again (F)';
+  document.querySelectorAll('.cam-view').forEach((b) => b.classList.toggle('on', b.dataset.view === cam.view));
+  const pan = cam.drag === 'pan';
+  $('camDrag').title = pan ? 'Left-drag pans (click: rotate instead)' : 'Left-drag rotates (click: pan instead)';
+  $('camDragIcon').innerHTML = pan
+    ? '<path d="M8 1.5v13M1.5 8h13M8 1.5l-2 2M8 1.5l2 2M8 14.5l-2-2M8 14.5l2-2M1.5 8l2-2M1.5 8l2 2M14.5 8l-2-2M14.5 8l-2 2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>'
+    : '<ellipse cx="8" cy="8" rx="6.5" ry="3" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12.5 4.6l1.2 1.4-1.8.3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="8" cy="8" r="1.4" fill="currentColor"/>';
+}
+
+$('camFollow').onclick = () => state.scene?.setFollow(!state.scene.follow);
+$('camZoomIn').onclick = () => state.scene?.zoomBy(0.75);
+$('camZoomOut').onclick = () => state.scene?.zoomBy(1.33);
+$('camRotL').onclick = () => state.scene?.rotateBy(Math.PI / 4);
+$('camRotR').onclick = () => state.scene?.rotateBy(-Math.PI / 4);
+document.querySelectorAll('.cam-view').forEach((b) => { b.onclick = () => state.scene?.setView(b.dataset.view); });
+$('camDrag').onclick = () => state.scene?.setDragMode(state.scene.dragMode === 'pan' ? 'rotate' : 'pan');
+const closeCamHelp = () => { $('camHelpCard').hidden = true; $('camHelp').setAttribute('aria-expanded', 'false'); };
+$('camHelp').onclick = (e) => {
+  e.stopPropagation();
+  const card = $('camHelpCard');
+  card.hidden = !card.hidden;
+  $('camHelp').setAttribute('aria-expanded', String(!card.hidden));
+};
+document.addEventListener('click', (e) => { if (!e.target.closest('.cam')) closeCamHelp(); });
+$('viewport').addEventListener('keydown', (e) => {
+  if (state.scene?.handleKey(e)) { e.preventDefault(); e.stopPropagation(); }
+});
+$('viewport').addEventListener('pointerdown', () => $('viewport').focus({ preventScroll: true }));
+
 document.addEventListener('keydown', (e) => {
   if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); $('drawer').hidden ? openDrawer() : closeDrawer(); return; }
   if (e.key === 'Escape' && !$('drawer').hidden) { closeDrawer(); return; }
+  if (e.key === 'Escape' && !$('camHelpCard').hidden) { closeCamHelp(); return; }
   if (e.target.closest('textarea, input, select, dialog')) return;
   if (e.key === ' ') { e.preventDefault(); state.playing ? stop() : play(); }
   else if (e.key === 'ArrowRight') { stop(); show(state.idx + 1); }
