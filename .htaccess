@@ -14,7 +14,7 @@ DirectoryIndex index.html
     RewriteRule ^learn$ app.html [L]
 
     # Developer-only folders and files are not part of the site.
-    RewriteRule ^(tools|screenshots)(/|$) - [F,L]
+    RewriteRule ^(tools|screenshots|\.github)(/|$) - [F,L]
     RewriteRule (^|/)(README\.md|DEPLOY\.md)$ - [F,L]
     # Belt and braces: the settings file belongs above the web root, but if a
     # copy ever lands in it, never serve it.

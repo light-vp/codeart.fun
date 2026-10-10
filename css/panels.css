@@ -1,0 +1,123 @@
+/* ===== codeart — movable workspace panels =====
+   Comic-strip panels: paper fill, ink strokes, hard offset shadows and corner
+   brackets. Colours come from the shared tokens when they exist and fall back
+   to the current theme otherwise. Everything is scoped to .ws-float, which
+   js/panels.js sets above the stacked mobile breakpoint. */
+.ws {
+    --pnl-paper: var(--paper, var(--surface));
+    --pnl-ink: var(--ink, var(--text));
+    --pnl-stroke: var(--stroke, 2.5px);
+    --pnl-shadow: var(--shadow-hard, 4px 4px 0 var(--pnl-ink));
+    --pnl-lift: 8px 8px 0 var(--pnl-ink);
+}
+
+.ws.ws-float { display: block; position: relative; isolation: isolate; background: var(--bg); }
+.ws-float > .stage { position: absolute; top: 0; bottom: 0; left: var(--dock-l, 0px); right: var(--dock-r, 0px); z-index: 0; }
+.ws-float > .left { position: absolute; inset: 0; z-index: 1; display: block; border: 0; background: transparent; pointer-events: none; }
+
+.ws-float .fpanel {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    pointer-events: auto;
+    background: var(--pnl-paper);
+    border: var(--pnl-stroke) solid var(--pnl-ink);
+    border-radius: 3px;
+    box-shadow: var(--pnl-shadow);
+    transition: box-shadow 0.12s ease;
+}
+.ws-float .fpanel > * { min-height: 0; }
+.ws-float .panel.fpanel { flex: none; border-bottom: var(--pnl-stroke) solid var(--pnl-ink); }
+.ws-float .fpanel > .tab-body, .ws-float .fpanel > .code-editor { border-radius: 0 0 2px 2px; }
+.ws-float .fpanel .code-editor { min-height: 60px; }
+.ws-float .fpanel .console { flex-basis: 110px; }
+.ws-float .fpanel.is-moving, .ws-float .fpanel.is-resizing { box-shadow: var(--pnl-lift); }
+
+/* comic-panel corner brackets */
+.ws-float .fpanel::before,
+.ws-float .fpanel::after {
+    content: '';
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border: 0 solid var(--pnl-ink);
+    pointer-events: none;
+    z-index: 2;
+}
+.ws-float .fpanel::before { top: -9px; left: -9px; border-top-width: var(--pnl-stroke); border-left-width: var(--pnl-stroke); }
+.ws-float .fpanel::after { bottom: -9px; right: -9px; border-bottom-width: var(--pnl-stroke); border-right-width: var(--pnl-stroke); }
+
+/* drag handles */
+.ws-float [data-drag] { cursor: grab; touch-action: none; }
+.ws-float [data-drag] :is(button, a, input) { cursor: pointer; }
+.ws-float .tabs { padding-left: 4px; align-items: flex-end; }
+.ws-float .editor-head { padding-left: 4px; }
+.grip { display: none; }
+.ws-float .grip {
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    width: 22px;
+    height: 30px;
+    margin-right: 2px;
+    padding: 0;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--muted);
+    cursor: grab;
+    touch-action: none;
+}
+.ws-float .tabs .grip { align-self: center; margin-bottom: 2px; }
+.ws-float .grip svg { width: 8px; height: 14px; }
+.ws-float .grip:hover { color: var(--pnl-ink); background: var(--surface-3); }
+.ws-float .grip:focus-visible { outline: var(--pnl-stroke) solid var(--pnl-ink); outline-offset: 1px; color: var(--pnl-ink); }
+
+/* resize handles: thin strips on each edge, squares on each corner */
+.rz { display: none; }
+.ws-float .rz { display: block; position: absolute; z-index: 3; touch-action: none; }
+.ws-float .rz-n, .ws-float .rz-s { left: 12px; right: 12px; height: 10px; cursor: ns-resize; }
+.ws-float .rz-e, .ws-float .rz-w { top: 12px; bottom: 12px; width: 10px; cursor: ew-resize; }
+.ws-float .rz-n { top: -6px; }
+.ws-float .rz-s { bottom: -6px; }
+.ws-float .rz-e { right: -6px; }
+.ws-float .rz-w { left: -6px; }
+.ws-float .rz-ne, .ws-float .rz-nw, .ws-float .rz-se, .ws-float .rz-sw { width: 18px; height: 18px; }
+.ws-float .rz-ne { top: -8px; right: -8px; cursor: nesw-resize; }
+.ws-float .rz-sw { bottom: -8px; left: -8px; cursor: nesw-resize; }
+.ws-float .rz-nw { top: -8px; left: -8px; cursor: nwse-resize; }
+.ws-float .rz-se { bottom: -8px; right: -8px; cursor: nwse-resize; }
+
+body.panels-busy { user-select: none; -webkit-user-select: none; }
+body.panels-busy * { cursor: inherit !important; }
+body[data-panel-cursor="move"] { cursor: grabbing; }
+body[data-panel-cursor="n"], body[data-panel-cursor="s"] { cursor: ns-resize; }
+body[data-panel-cursor="e"], body[data-panel-cursor="w"] { cursor: ew-resize; }
+body[data-panel-cursor="ne"], body[data-panel-cursor="sw"] { cursor: nesw-resize; }
+body[data-panel-cursor="nw"], body[data-panel-cursor="se"] { cursor: nwse-resize; }
+
+/* mono pill button (Reset layout) */
+.pill {
+    display: inline-flex;
+    align-items: center;
+    height: 28px;
+    padding: 0 12px;
+    border: var(--stroke, 2.5px) solid var(--ink, var(--text));
+    border-radius: 999px;
+    background: var(--paper, var(--surface));
+    color: var(--ink, var(--text));
+    font: 600 10.5px var(--mono);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    box-shadow: 2px 2px 0 var(--ink, var(--text));
+    transition: transform 0.08s, box-shadow 0.08s;
+}
+.pill:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--ink, var(--text)); }
+.pill:active { transform: translate(2px, 2px); box-shadow: 0 0 0 var(--ink, var(--text)); }
+.pill:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+@media (max-width: 920px) {
+    #layoutBtn { display: none; }
+}

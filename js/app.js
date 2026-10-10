@@ -1,6 +1,7 @@
 import { CodeEditor, highlightPython } from './editor.js';
 import { EXAMPLES } from './examples.js';
 import { decodeStep, layoutStep, TokenBook } from './model.js';
+import { PanelLayout } from './panels.js';
 import { loadPython, test as runTests, trace as runTrace } from './runtime.js';
 import { account } from './sync.js';
 import { LEVELS, TIERS, TRACKS, programFor, rankedSolutions } from '../levels/index.js';
@@ -66,6 +67,14 @@ function queueDraftUpload(levelId, code) {
   clearTimeout(draftTimer);
   draftTimer = setTimeout(() => account.saveDraft(levelId, code).catch(() => {}), 1500);
 }
+
+// ================================================================ panels
+const panels = new PanelLayout(document.querySelector('.ws'), {
+  onChange: () => { $('layoutBtn').hidden = !panels.customised; },
+});
+$('layoutBtn').hidden = !panels.customised;
+$('layoutBtn').onclick = () => panels.reset();
+account.onChange((user) => { panels.load(user); $('layoutBtn').hidden = !panels.customised; });
 
 // ================================================================ scene
 async function initScene() {

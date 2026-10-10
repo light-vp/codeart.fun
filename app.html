@@ -11,6 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/app.css">
+    <link rel="stylesheet" href="css/panels.css">
     <script>
         (function () {
             var t = null;
@@ -50,6 +51,7 @@
                 <svg viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="15" class="ring-bg"/><circle cx="18" cy="18" r="15" class="ring-fg" id="ringFg"/></svg>
                 <span id="progressText">0/36</span>
             </span>
+            <button class="pill" id="layoutBtn" title="Put the panels back where they started" hidden>Reset layout</button>
             <button class="icon-btn" id="themeBtn" title="Toggle theme" aria-label="Toggle theme">
                 <svg viewBox="0 0 16 16"><path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13zm0 1.5v10a5 5 0 0 1 0-10z" fill="currentColor"/></svg>
             </button>
@@ -59,8 +61,9 @@
 
     <main class="ws">
         <section class="left" aria-label="Problem and editor">
-            <div class="panel">
-                <div class="tabs" role="tablist">
+            <div class="panel fpanel" data-panel="problem">
+                <div class="tabs" role="tablist" data-drag>
+                    <button class="grip" data-grip title="Drag to move. Arrow keys nudge, Shift + arrows resize." aria-label="Move the problem panel"><svg viewBox="0 0 10 16" aria-hidden="true"><g fill="currentColor"><circle cx="2.5" cy="3" r="1.4"/><circle cx="7.5" cy="3" r="1.4"/><circle cx="2.5" cy="8" r="1.4"/><circle cx="7.5" cy="8" r="1.4"/><circle cx="2.5" cy="13" r="1.4"/><circle cx="7.5" cy="13" r="1.4"/></g></svg></button>
                     <button class="tab active" data-tab="problem" role="tab">Problem</button>
                     <button class="tab" data-tab="solutions" role="tab">Solutions <span class="tab-count" id="solCount"></span></button>
                     <button class="tab" data-tab="history" role="tab">History</button>
@@ -70,8 +73,9 @@
                 <div class="tab-body" id="historyPane" hidden></div>
             </div>
 
-            <div class="editor-card">
-                <div class="editor-head">
+            <div class="editor-card fpanel" data-panel="code">
+                <div class="editor-head" data-drag>
+                    <button class="grip" data-grip title="Drag to move. Arrow keys nudge, Shift + arrows resize." aria-label="Move the code panel"><svg viewBox="0 0 10 16" aria-hidden="true"><g fill="currentColor"><circle cx="2.5" cy="3" r="1.4"/><circle cx="7.5" cy="3" r="1.4"/><circle cx="2.5" cy="8" r="1.4"/><circle cx="7.5" cy="8" r="1.4"/><circle cx="2.5" cy="13" r="1.4"/><circle cx="7.5" cy="13" r="1.4"/></g></svg></button>
                     <span class="file"><i></i>main.py</span>
                     <span class="spacer"></span>
                     <button class="btn ghost" id="resetBtn" title="Restore the starter code">Reset</button>
