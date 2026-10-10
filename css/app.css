@@ -336,3 +336,24 @@ body { display: flex; flex-direction: column; }
     #firstBtn, #lastBtn { display: none; }
     .tab-body { padding: 16px; }
 }
+
+/* ---------- minimal: quieter stage bar and level picker ---------- */
+/* the stage bar is one strip of text; the steps no longer sit in boxes */
+:root[data-style="minimal"] .pipeline { padding: 4px 6px; border-radius: 12px; }
+:root[data-style="minimal"] .stage-step,
+:root[data-style="minimal"] .stage-step.on { background: transparent; }
+:root[data-style="minimal"] .stage-link { width: 1px; height: auto; justify-self: center; background: var(--line); }
+:root[data-style="minimal"] .stage-link span { display: none; }
+:root[data-style="minimal"] #execText { color: var(--muted); }
+/* level picker: blurbs only on the open track, difficulty as a dot */
+:root[data-style="minimal"] .track:not(.open) .track-name span { display: none; }
+:root[data-style="minimal"] .track-toggle { padding: 8px; }
+:root[data-style="minimal"] .lv-num { border: 0; width: auto; color: var(--muted); }
+:root[data-style="minimal"] .lv.done .lv-num { background: transparent; color: var(--ok); }
+:root[data-style="minimal"] .lv .diff { background: transparent; padding: 0; font: 500 12px var(--font); letter-spacing: 0; text-transform: none; color: var(--muted); display: inline-flex; align-items: center; gap: 6px; }
+:root[data-style="minimal"] .lv .diff::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+:root[data-style="minimal"] .lv .diff.intro::before { background: var(--cool); }
+:root[data-style="minimal"] .lv .diff.easy::before { background: var(--ok); }
+:root[data-style="minimal"] .lv .diff.medium::before { background: var(--accent); }
+:root[data-style="minimal"] .lv .diff.hard::before { background: var(--bad); }
+:root[data-style="minimal"] .lv.active { background: var(--surface-3); box-shadow: inset 2px 0 0 var(--accent); }
